@@ -1,0 +1,56 @@
+
+<!-- indexer::stop -->
+<div class="<?php echo $this->class; ?> block"<?php echo $this->cssID; ?><?php if ($this->style): ?> style="<?php echo $this->style; ?>"<?php endif; ?>>
+<?php if ($this->headline): ?><<?php echo $this->hl; ?>><?php echo $this->headline; ?></<?php echo $this->hl; ?>><?php endif; ?>
+
+<?php if (count($this->menu) > 0): ?>
+
+<?php foreach ($this->menu as $item): ?>
+<p><a href="<?php echo $item['href']; ?>"><?php echo $item['name']; ?></a></p>
+<?php endforeach; ?>
+
+<?php else: ?>
+
+<?php if (count($this->docs) > 0): ?>
+<br />
+<table summary="<?php echo $this->lbl_documentlist_alt; ?>" cellspacing="0" cellpadding="0">
+<caption><?php echo $this->lbl_groupby; ?></caption>
+<thead>
+  <tr>
+<th><?php echo $this->lbl_document; ?></th>
+<?php foreach($this->fields as $item): ?>
+  <?php if ($item['visible']): ?>
+<th><?php echo $item['name']; ?></th>
+  <?php endif; ?>
+<?php endforeach; ?>
+  </tr>
+</thead>
+<tbody>
+<?php foreach ($this->docs as $item): ?>
+<tr>
+  <td>
+    <a href="<?php echo $item['href_document']; ?>"><?php echo $item['label_document']; ?></a>
+    <?php if (isset($item['href_attach1']) && $item['href_attach1']): ?><br /><a href="<?php echo $item['href_attach1']; ?>"><?php echo $this->lbl_attach1; ?></a><?php endif; ?>
+    <?php if (isset($item['href_attach2']) && $item['href_attach2']): ?><br /><a href="<?php echo $item['href_attach2']; ?>"><?php echo $this->lbl_attach2; ?></a><?php endif; ?>
+    <?php if (isset($item['href_attach3']) && $item['href_attach3']): ?><br /><a href="<?php echo $item['href_attach3']; ?>"><?php echo $this->lbl_attach3; ?></a><?php endif; ?>
+    <?php if (isset($item['href_attach4']) && $item['href_attach4']): ?><br /><a href="<?php echo $item['href_attach4']; ?>"><?php echo $this->lbl_attach4; ?></a><?php endif; ?>
+  </td>
+  <?php foreach($item[fields] as $key=>$field): ?>
+    <?php if ($this->fields[$key]['visible']): ?>
+  <td><?php echo $field; ?></td>
+    <?php endif; ?>
+  <?php endforeach; ?>
+</tr>
+<?php endforeach; ?>
+</tbody>
+</table>
+<?php else: ?>
+<p><?php echo $this->msg_nodata; ?></p>
+<?php endif; ?>
+<p class="back"><a href="<?php echo $this->referer; ?>" title="<?php echo $this->back; ?>"><?php echo $this->back; ?></a></p>
+<?php endif; ?>
+
+
+
+</div>
+<!-- indexer::continue -->

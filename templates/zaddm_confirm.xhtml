@@ -1,0 +1,24 @@
+
+<!-- indexer::stop -->
+<div class="<?php echo $this->class; ?> block"<?php echo $this->cssID; ?><?php if ($this->style): ?> style="<?php echo $this->style; ?>"<?php endif; ?>>
+<?php if ($this->headline): ?><<?php echo $this->hl; ?>><?php echo $this->headline; ?></<?php echo $this->hl; ?>><?php endif; ?>
+
+<form action="<?php echo $this->href_action; ?>" id="zad_docman_delete" method="post">
+<div class="formbody">
+  <input type="hidden" name="FORM_SUBMIT" value="zad_docman_delete" />
+  <input type="hidden" name="REQUEST_TOKEN" value="{{request_token}}" />
+  <div class="headline"><p><?php echo $this->header; ?></p></div>
+  <ul>
+  <?php foreach($this->fields as $item): ?>
+    <li><?php echo $item['name']; ?>: <?php echo $item['value']; ?></li>
+  <?php endforeach; ?>
+  </ul>
+  <div class="submit_container">
+    <input type="submit" id="ctrl_save" name="_confirm" class="submit" value="<?php echo $this->lbl_confirm; ?>" />
+    <input type="submit" id="ctrl_cancel" name="_cancel" class="submit" value="<?php echo $this->lbl_cancel; ?>" />
+  </div>
+</div>
+</form>
+
+</div>
+<!-- indexer::continue -->

@@ -1,0 +1,117 @@
+
+<!-- indexer::stop -->
+<div class="<?php echo $this->class; ?> block"<?php echo $this->cssID; ?><?php if ($this->style): ?> style="<?php echo $this->style; ?>"<?php endif; ?>>
+<?php if ($this->headline): ?><<?php echo $this->hl; ?>><?php echo $this->headline; ?></<?php echo $this->hl; ?>><?php endif; ?>
+
+<form action="<?php echo $this->href_action; ?>" id="zad_docman_edit" method="post" enctype="multipart/form-data">
+<div class="formbody">
+  <input type="hidden" name="FORM_SUBMIT" value="zad_docman_edit" />
+  <input type="hidden" name="REQUEST_TOKEN" value="{{request_token}}" />
+  <div class="headline"><p><?php echo $this->header; ?></p></div>
+<?php foreach ($this->fields as $key=>$item): ?>
+  <?php if (isset($this->error['field_'.$key])): ?><div class="explanation"><p><?php echo $this->error['field_'.$key]; ?></p></div><?php endif; ?>
+  <?php if ($item['type']=='choice'): ?>
+    <label for="ctrl_field_<?php echo $key; ?>"<?php if($item['mandatory']): ?> class="mandatory"<?php endif; ?>>
+    <?php if($item['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
+    <?php echo $item['name']; ?>
+    <?php if($item['mandatory']): ?><span class="mandatory">*</span><?php endif; ?>
+    </label>
+    <select name="field_<?php echo $key; ?>" id="ctrl_field_<?php echo $key; ?>" class="select<?php if($item['mandatory']): ?> mandatory<?php endif; ?>">
+    <?php foreach (explode(',',$item['list']) as $kopt=>$opt): ?>
+      <option value="<?php echo $kopt; ?>"<?php if (!empty($item['value']) && $item['value']==$kopt): ?> selected="selected"<?php endif; ?>><?php echo $opt; ?></option>
+    <?php endforeach; ?>
+    </select>
+    <br />
+  <?php elseif ($item['type']=='mchoice'): ?>
+    <fieldset id="ctrl_field_<?php echo $key; ?>" class="checkbox_container<?php if($item['mandatory']): ?> mandatory<?php endif; ?>">
+    <legend>
+    <?php if($item['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
+    <?php echo $item['name']; ?>
+    <?php if($item['mandatory']): ?><span class="mandatory">*</span><?php endif; ?>
+    </legend>
+    <?php foreach (explode(',',$item['list']) as $kopt=>$opt): ?>
+      <span><input type="checkbox" name="field_<?php echo $key; ?>[]" id="ctrl_field_<?php echo $key; ?>_<?php echo $kopt; ?>" class="checkbox" value="<?php echo $kopt; ?>"<?php if (!empty($item['value']) && in_array($kopt,deserialize($item['value']))): ?> checked="checked"<?php endif; ?> />
+      <label for="ctrl_field_<?php echo $key; ?>_<?php echo $kopt; ?>"><?php echo $opt; ?></label></span>
+    <?php endforeach; ?>
+    </fieldset>
+    <br />
+  <?php elseif ($item['type']=='date'): ?>
+    <label for="ctrl_field_<?php echo $key; ?>"<?php if($item['mandatory']): ?> class="mandatory"<?php endif; ?>>
+    <?php if($item['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
+    <?php echo $item['name']; ?>
+    <?php if($item['mandatory']): ?><span class="mandatory">*</span><?php endif; ?>
+    </label>
+    <input type="text" name="field_<?php echo $key; ?>" id="ctrl_field_<?php echo $key; ?>" class="text<?php if($item['mandatory']): ?> mandatory<?php endif; ?>" value="<?php echo $item['value']; ?>" />
+    <br />
+  <?php elseif ($item['type'] == 'auto'): ?>
+    <?php if ($this->isManager && $item['auto_field'] == 'timestamp' && $item['auto_editable']): ?>
+    <label for="ctrl_field_<?php echo $key; ?>"><?php echo $item['name']; ?></label>
+    <input type="text" name="field_<?php echo $key; ?>" id="ctrl_field_<?php echo $key; ?>" class="text" value="<?php echo $item['value']; ?>" />
+    <br />
+    <?php elseif ($this->isManager && $item['auto_field'] == 'user' && $item['auto_editable']): ?>
+    <label for="ctrl_field_<?php echo $key; ?>"><?php echo $item['name']; ?></label>
+    <input type="text" name="field_<?php echo $key; ?>" id="ctrl_field_<?php echo $key; ?>" class="text" value="<?php echo $item['value']; ?>" />
+    <br />
+    <?php endif; ?>
+  <?php else: ?>
+    <label for="ctrl_field_<?php echo $key; ?>"<?php if($item['mandatory']): ?> class="mandatory"<?php endif; ?>>
+    <?php if($item['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
+    <?php echo $item['name']; ?>
+    <?php if($item['mandatory']): ?><span class="mandatory">*</span><?php endif; ?>
+    </label>
+    <input type="text" name="field_<?php echo $key; ?>" id="ctrl_field_<?php echo $key; ?>" class="text<?php if($item['mandatory']): ?> mandatory<?php endif; ?>" value="<?php echo $item['value']; ?>" />
+    <br />
+  <?php endif; ?>
+<?php endforeach; ?>
+  <?php if (isset($this->error['document'])): ?><div class="explanation"><p><?php echo $this->error['document']; ?></p></div><?php endif; ?>
+  <?php if (isset($this->lbl_document_exists)): ?><div class="explanation"><p><?php echo $this->lbl_document_exists; ?></p></div><?php endif; ?>
+  <label for="ctrl_document" class="mandatory"><span class="invisible"><?php echo $this->lbl_mandatory; ?></span> <?php echo $this->lbl_document; ?><span class="mandatory">*</span></label>
+  <input type="file" name="document" id="ctrl_document" class="upload mandatory" />
+  <br />
+<?php if ($this->attach): ?>
+  <?php if (isset($this->error['attach1'])): ?><div class="explanation"><p><?php echo $this->error['attach1']; ?></p></div><?php endif; ?>
+  <?php if (isset($this->lbl_attach1_exists)): ?>
+  <div class="explanation"><p><?php echo $this->lbl_attach1_exists; ?></p></div>
+  <span><input type="checkbox" name="remove_attach1" id="ctrl_remove_attach1" class="checkbox" value="1" />
+  <label for="ctrl_remove_attach1"><?php echo $this->lbl_remove_attach1; ?></label></span>
+  <?php endif; ?>
+  <label for="ctrl_attach1"> <?php echo $this->lbl_attach1; ?></label>
+  <input type="file" name="attach1" id="ctrl_attach1" class="upload" />
+  <br />
+  <?php if (isset($this->error['attach2'])): ?><div class="explanation"><p><?php echo $this->error['attach2']; ?></p></div><?php endif; ?>
+  <?php if (isset($this->lbl_attach2_exists)): ?>
+  <div class="explanation"><p><?php echo $this->lbl_attach2_exists; ?></p></div>
+  <span><input type="checkbox" name="remove_attach2" id="ctrl_remove_attach2" class="checkbox" value="1" />
+  <label for="ctrl_remove_attach2"><?php echo $this->lbl_remove_attach2; ?></label></span>
+  <?php endif; ?>
+  <label for="ctrl_attach2"> <?php echo $this->lbl_attach2; ?></label>
+  <input type="file" name="attach2" id="ctrl_attach2" class="upload" />
+  <br />
+  <?php if (isset($this->error['attach3'])): ?><div class="explanation"><p><?php echo $this->error['attach3']; ?></p></div><?php endif; ?>
+  <?php if (isset($this->lbl_attach3_exists)): ?>
+  <div class="explanation"><p><?php echo $this->lbl_attach3_exists; ?></p></div>
+  <span><input type="checkbox" name="remove_attach3" id="ctrl_remove_attach3" class="checkbox" value="1" />
+  <label for="ctrl_remove_attach3"><?php echo $this->lbl_remove_attach3; ?></label></span>
+  <?php endif; ?>
+  <label for="ctrl_attach3"> <?php echo $this->lbl_attach3; ?></label>
+  <input type="file" name="attach3" id="ctrl_attach3" class="upload" />
+  <br />
+  <?php if (isset($this->error['attach4'])): ?><div class="explanation"><p><?php echo $this->error['attach4']; ?></p></div><?php endif; ?>
+  <?php if (isset($this->lbl_attach4_exists)): ?>
+  <div class="explanation"><p><?php echo $this->lbl_attach4_exists; ?></p></div>
+  <span><input type="checkbox" name="remove_attach4" id="ctrl_remove_attach4" class="checkbox" value="1" />
+  <label for="ctrl_remove_attach4"><?php echo $this->lbl_remove_attach4; ?></label></span>
+  <?php endif; ?>
+  <label for="ctrl_attach4"> <?php echo $this->lbl_attach4; ?></label>
+  <input type="file" name="attach4" id="ctrl_attach4" class="upload" />
+  <br />
+<?php endif; ?>
+  <div class="submit_container">
+    <input type="submit" id="ctrl_save" name="_save" class="submit" value="<?php echo $this->lbl_save; ?>" />
+    <input type="submit" id="ctrl_cancel" name="_cancel" class="submit" value="<?php echo $this->lbl_cancel; ?>" />
+  </div>
+</div>
+</form>
+
+</div>
+<!-- indexer::continue -->
