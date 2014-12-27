@@ -4,47 +4,40 @@
 <?php if ($this->headline): ?><<?php echo $this->hl; ?>><?php echo $this->headline; ?></<?php echo $this->hl; ?>><?php endif; ?>
 
 <?php if (count($this->docs) > 0): ?>
-<table summary="<?php echo $this->lbl_documentlist_alt; ?>" cellspacing="0" cellpadding="0">
+<table summary="<?php echo $this->lbl_documentlist; ?>" cellspacing="0" cellpadding="0">
 <caption><?php echo $this->lbl_documentlist; ?></caption>
 <thead>
   <tr>
-<th><?php echo $this->lbl_document; ?></th>
-<?php foreach($this->fields as $item): ?>
-  <?php if ($item['visible']): ?>
-<th><?php echo $item['name']; ?></th>
-  <?php endif; ?>
-<?php endforeach; ?>
-<th>&nbsp;</th>
+    <th><?php echo $this->lbl_status; ?></th>
+    <?php foreach($this->fields as $item): ?>
+      <?php if ($item['show']): ?><th><?php echo $item['label']; ?></th><?php endif; ?>
+    <?php endforeach; ?>
+    <th>&nbsp;</th>
   </tr>
 </thead>
 <tbody>
 <?php foreach ($this->docs as $item): ?>
-<tr>
-  <td>
-    <a href="<?php echo $item['href_document']; ?>"><?php echo $this->lbl_document; ?></a>
-    <?php if (isset($item['href_attach1']) && $item['href_attach1']): ?><br /><a href="<?php echo $item['href_attach1']; ?>"><?php echo $this->lbl_attach1; ?></a><?php endif; ?>
-    <?php if (isset($item['href_attach2']) && $item['href_attach2']): ?><br /><a href="<?php echo $item['href_attach2']; ?>"><?php echo $this->lbl_attach2; ?></a><?php endif; ?>
-    <?php if (isset($item['href_attach3']) && $item['href_attach3']): ?><br /><a href="<?php echo $item['href_attach3']; ?>"><?php echo $this->lbl_attach3; ?></a><?php endif; ?>
-    <?php if (isset($item['href_attach4']) && $item['href_attach4']): ?><br /><a href="<?php echo $item['href_attach4']; ?>"><?php echo $this->lbl_attach4; ?></a><?php endif; ?>
-  </td>
-  <?php foreach($item[fields] as $key=>$field): ?>
-    <?php if ($this->fields[$key]['visible']): ?>
-  <td><?php echo $field; ?></td>
-    <?php endif; ?>
-  <?php endforeach; ?>
-  <td>
-    <?php if ($item['href_edit']): ?><a href="<?php echo $item['href_edit']; ?>"><?php echo $this->lbl_edit; ?></a><?php endif; ?>
-    <?php if ($item['href_delete']): ?><a href="<?php echo $item['href_delete']; ?>"><?php echo $this->lbl_delete; ?></a><?php endif; ?>
-  </td>
-</tr>
+  <tr>
+    <td><?php echo $this->$item['status']; ?></td>
+    <?php foreach($item['values'] as $value): ?>
+    <td><?php echo $value ; ?></td>
+    <?php endforeach; ?>
+    <td>
+      <a href="<?php echo $item['href_show']; ?>"><?php echo $this->but_show; ?></a>
+      <?php if ($item['href_publish']): ?><a href="<?php echo $item['href_publish']; ?>"><?php echo $this->but_publish; ?></a><?php endif; ?>
+      <?php if ($item['href_unpublish']): ?><a href="<?php echo $item['href_unpublish']; ?>"><?php echo $this->but_unpublish; ?></a><?php endif; ?>
+      <?php if ($item['href_edit']): ?><a href="<?php echo $item['href_edit']; ?>"><?php echo $this->but_edit; ?></a><?php endif; ?>
+      <?php if ($item['href_delete']): ?><a href="<?php echo $item['href_delete']; ?>"><?php echo $this->but_delete; ?></a><?php endif; ?>
+    </td>
+  </tr>
 <?php endforeach; ?>
 </tbody>
 </table>
 <?php else: ?>
-<p><?php echo $this->msg_nodata; ?></p>
+<p><?php echo $this->wrn_nodata; ?></p>
 <?php endif; ?>
 
-<p><a href="<?php echo $this->href_add; ?>"><?php echo $this->lbl_add; ?></a></p>
+<p><a href="<?php echo $this->href_add; ?>"><?php echo $this->but_add; ?></a></p>
 
 <?php echo $this->pagination; ?>
 

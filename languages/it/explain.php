@@ -16,10 +16,12 @@
  * Help wizard messages
  */
 $GLOBALS['TL_LANG']['XPL']['zad_docman_tags'] = array(
-  array('Tag di inserimento campi',
-    'Per inserire il contenuto dei campi impostati, usare la sintassi seguente:<br />
-     <strong>{{numero}}</strong><br />
-     dove <em>numero</em> identifica il campo da inserire.
+  array('Tag di inserimento',
+    'Per inserire il contenuto preimpostato, usare la sintassi seguente:<br /><br />
+     <strong>{{field:nome}}</strong><br />
+     inserisce il valore corrente del campo <em>nome</em>.<br /><br />
+     <strong>{{attachnum}}</strong><br />
+     inserisce il numero dell\'allegato (usato solo per gli allegati).<br /><br />
     ')
 );
 

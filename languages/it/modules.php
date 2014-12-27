@@ -15,13 +15,13 @@
 /**
  * Back end modules
  */
-$GLOBALS['TL_LANG']['MOD']['zad_docman'] = array('Gestione documenti', 'Permette l\'inserimento di documenti in modo strutturato.');
+$GLOBALS['TL_LANG']['MOD']['zad_docman'] = array('Documenti', 'Permette la gestione dei documenti.');
 
 
 /**
  * Front end modules
  */
-$GLOBALS['TL_LANG']['FMD']['zad_docman'] = 'Gestione Documenti';
-$GLOBALS['TL_LANG']['FMD']['zad_docman_manager'] = array('Modifica Documenti', 'Inserimento e modifica dei documenti.');
-$GLOBALS['TL_LANG']['FMD']['zad_docman_reader'] = array('Visualizzazione Documenti', 'Visualizzazione dei documenti.');
+$GLOBALS['TL_LANG']['FMD']['zad_docman'] = 'Documenti';
+$GLOBALS['TL_LANG']['FMD']['zad_docman_manager'] = array('Gestione documenti', 'Inserimento e modifica dei documenti.');
+// $GLOBALS['TL_LANG']['FMD']['zad_docman_reader'] = array('Visualizzazione documenti', 'Visualizzazione dei documenti.');
 

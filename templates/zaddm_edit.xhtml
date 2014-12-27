@@ -8,107 +8,227 @@
   <input type="hidden" name="FORM_SUBMIT" value="zad_docman_edit" />
   <input type="hidden" name="REQUEST_TOKEN" value="{{request_token}}" />
   <div class="headline"><p><?php echo $this->header; ?></p></div>
-<?php foreach ($this->fields as $key=>$item): ?>
-  <?php if (isset($this->error['field_'.$key])): ?><div class="explanation"><p><?php echo $this->error['field_'.$key]; ?></p></div><?php endif; ?>
-  <?php if ($item['type']=='choice'): ?>
-    <label for="ctrl_field_<?php echo $key; ?>"<?php if($item['mandatory']): ?> class="mandatory"<?php endif; ?>>
-    <?php if($item['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
-    <?php echo $item['name']; ?>
-    <?php if($item['mandatory']): ?><span class="mandatory">*</span><?php endif; ?>
+<?php foreach ($this->fields as $kfield=>$field): ?>
+  <?php if ($field['type'] == 't_choice'): ?>
+    <?php if ($field['listOther']): ?>
+<script type="text/javascript">//<![CDATA[
+function ZadDocman_<?php echo $kfield; ?>(el) {
+  var txt = document.getElementById("ctrl_field_<?php echo $kfield; ?>__OTHER__");
+  if (el.value=='__OTHER__') {
+    txt.disabled = false;
+    txt.focus();
+  } else {
+    txt.value = '';
+    txt.disabled = true;
+  }
+}
+//]]></script>
+    <?php endif; ?>
+    <label for="ctrl_field_<?php echo $kfield; ?>"<?php if ($field['mandatory']): ?> class="mandatory"<?php endif; ?>>
+    <?php if ($field['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
+    <?php echo $field['label']; ?>:<?php if ($field['mandatory']): ?> <span class="mandatory">*</span><?php endif; ?>
     </label>
-    <select name="field_<?php echo $key; ?>" id="ctrl_field_<?php echo $key; ?>" class="select<?php if($item['mandatory']): ?> mandatory<?php endif; ?>">
-    <?php foreach (explode(',',$item['list']) as $kopt=>$opt): ?>
-      <option value="<?php echo $kopt; ?>"<?php if (!empty($item['value']) && $item['value']==$kopt): ?> selected="selected"<?php endif; ?>><?php echo $opt; ?></option>
+    <?php if (isset($this->error['field_'.$kfield])): ?><div class="explanation"><p><?php echo $this->error['field_'.$kfield]; ?></p></div><?php endif; ?>
+    <select name="field_<?php echo $kfield; ?>" id="ctrl_field_<?php echo $kfield; ?>" class="select<?php if ($field['mandatory']): ?> mandatory<?php endif; ?>"<?php if ($field['listOther']): ?> onChange="ZadDocman_<?php echo $kfield; ?>(this)"<?php endif; ?>>
+    <?php foreach (unserialize($field['list']) as $opt): ?>
+      <?php if (isset($opt['group']) && $opt['group'] && $opt['value'] == 'start'): ?>
+      <optgroup label="<?php echo $opt['label']; ?>">
+      <?php elseif (isset($opt['group']) && $opt['group'] && $opt['value'] == 'end'): ?>
+      </optgroup>
+      <?php else: ?>
+      <option value="<?php echo $opt['value']; ?>"<?php if (!empty($this->data[$kfield]) && $this->data[$kfield] == $opt['value']): ?> selected="selected"<?php endif; ?>><?php echo $opt['label']; ?></option>
+      <?php endif; ?>
     <?php endforeach; ?>
+    <?php if ($field['listOther']): ?><option value="__OTHER__"<?php if (substr($this->data[$kfield],0,10) == '__OTHER__:'): ?> selected="selected"<?php endif; ?>><?php echo $this->lbl_listother; ?></option><?php endif; ?>
     </select>
+    <?php if ($field['listOther']): ?><input type="text" name="field_<?php echo $kfield; ?>__OTHER__" id="ctrl_field_<?php echo $kfield; ?>__OTHER__" class="text" value="<?php echo substr($this->data[$kfield],10); ?>"<?php if (substr($this->data[$kfield],0,10) != '__OTHER__:'): ?> disabled="disabled"<?php endif; ?> /><?php endif; ?>
     <br />
-  <?php elseif ($item['type']=='mchoice'): ?>
-    <fieldset id="ctrl_field_<?php echo $key; ?>" class="checkbox_container<?php if($item['mandatory']): ?> mandatory<?php endif; ?>">
+  <?php elseif ($field['type'] == 't_mchoice'): ?>
+    <?php if ($field['listOther']): ?>
+<script type="text/javascript">//<![CDATA[
+function ZadDocman_<?php echo $kfield; ?>(el) {
+  var txt = document.getElementById("ctrl_field_<?php echo $kfield; ?>__OTHER__");
+  if (el.checked) {
+    txt.disabled = false;
+    txt.focus();
+  } else {
+    txt.value = '';
+    txt.disabled = true;
+  }
+}
+//]]></script>
+    <?php endif; ?>
+    <fieldset id="ctrl_field_<?php echo $kfield; ?>" class="checkbox_container<?php if($field['mandatory']): ?> mandatory<?php endif; ?>">
     <legend>
-    <?php if($item['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
-    <?php echo $item['name']; ?>
-    <?php if($item['mandatory']): ?><span class="mandatory">*</span><?php endif; ?>
+    <?php if ($field['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
+    <?php echo $field['label']; ?>:<?php if ($field['mandatory']): ?> <span class="mandatory">*</span><?php endif; ?>
     </legend>
-    <?php foreach (explode(',',$item['list']) as $kopt=>$opt): ?>
-      <span><input type="checkbox" name="field_<?php echo $key; ?>[]" id="ctrl_field_<?php echo $key; ?>_<?php echo $kopt; ?>" class="checkbox" value="<?php echo $kopt; ?>"<?php if (!empty($item['value']) && in_array($kopt,deserialize($item['value']))): ?> checked="checked"<?php endif; ?> />
-      <label for="ctrl_field_<?php echo $key; ?>_<?php echo $kopt; ?>"><?php echo $opt; ?></label></span>
+    <?php if (isset($this->error['field_'.$kfield])): ?><div class="explanation"><p><?php echo $this->error['field_'.$kfield]; ?></p></div><?php endif; ?>
+    <?php foreach (unserialize($field['list']) as $kopt=>$opt): ?>
+      <?php if (isset($opt['group']) && $opt['group'] && $opt['value'] == 'start'): ?>
+      <fieldset><legend><?php echo $opt['label']; ?></legend>
+      <?php elseif (isset($opt['group']) && $opt['group'] && $opt['value'] == 'end'): ?>
+      </fieldset>
+      <?php else: ?>
+      <span><input type="checkbox" name="field_<?php echo $kfield; ?>[]" id="ctrl_field_<?php echo $kfield; ?>_<?php echo $kopt; ?>" class="checkbox" value="<?php echo $opt['value']; ?>"<?php if (!empty($this->data[$kfield]) && in_array($opt['value'],$this->data[$kfield])): ?> checked="checked"<?php endif; ?> />
+      <label for="ctrl_field_<?php echo $kfield; ?>_<?php echo $kopt; ?>"><?php echo $opt['label']; ?></label></span>
+      <?php endif; ?>
     <?php endforeach; ?>
+    <?php if ($field['listOther']): ?>
+      <span><input type="checkbox" name="field_<?php echo $kfield; ?>[]" id="ctrl_field_<?php echo $kfield; ?>_OTHER" class="checkbox" value="__OTHER__"<?php if (in_array('__OTHER__',$this->data[$kfield])): ?> checked="checked"<?php endif; ?><?php if ($field['listOther']): ?> onChange="ZadDocman_<?php echo $kfield; ?>(this)"<?php endif; ?> />
+      <label for="ctrl_field_<?php echo $kfield; ?>__OTHER__"><?php echo $this->lbl_listother; ?></label>
+      <input type="text" name="field_<?php echo $kfield; ?>__OTHER__" id="ctrl_field_<?php echo $kfield; ?>__OTHER__" class="text" value="<?php if (in_array('__OTHER__',$this->data[$kfield])): ?><?php echo substr(end($this->data[$kfield]),10); ?><?php endif; ?>" <?php if (!in_array('__OTHER__',$this->data[$kfield])): ?> disabled="disabled"<?php endif; ?> />
+      </span>
+    <?php endif; ?>
     </fieldset>
     <br />
-  <?php elseif ($item['type']=='date'): ?>
-    <label for="ctrl_field_<?php echo $key; ?>"<?php if($item['mandatory']): ?> class="mandatory"<?php endif; ?>>
-    <?php if($item['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
-    <?php echo $item['name']; ?>
-    <?php if($item['mandatory']): ?><span class="mandatory">*</span><?php endif; ?>
+  <?php elseif ($field['type'] == 't_auto'): ?>
+    <?php if ($this->isAdmin): ?>
+    <label for="ctrl_field_<?php echo $kfield; ?>" class="mandatory">
+    <span class="invisible"><?php echo $this->lbl_mandatory; ?></span>
+    <?php echo $field['label']; ?>: <span class="mandatory">*</span>
     </label>
-    <input type="text" name="field_<?php echo $key; ?>" id="ctrl_field_<?php echo $key; ?>" class="text<?php if($item['mandatory']): ?> mandatory<?php endif; ?>" value="<?php echo $item['value']; ?>" />
-    <br />
-  <?php elseif ($item['type'] == 'auto'): ?>
-    <?php if ($this->isManager && $item['auto_field'] == 'timestamp' && $item['auto_editable']): ?>
-    <label for="ctrl_field_<?php echo $key; ?>"><?php echo $item['name']; ?></label>
-    <input type="text" name="field_<?php echo $key; ?>" id="ctrl_field_<?php echo $key; ?>" class="text" value="<?php echo $item['value']; ?>" />
-    <br />
-    <?php elseif ($this->isManager && $item['auto_field'] == 'user' && $item['auto_editable']): ?>
-    <label for="ctrl_field_<?php echo $key; ?>"><?php echo $item['name']; ?></label>
-    <input type="text" name="field_<?php echo $key; ?>" id="ctrl_field_<?php echo $key; ?>" class="text" value="<?php echo $item['value']; ?>" />
+    <?php if (isset($this->error['field_'.$kfield])): ?><div class="explanation"><p><?php echo $this->error['field_'.$kfield]; ?></p></div><?php endif; ?>
+    <input type="text" name="field_<?php echo $kfield; ?>" id="ctrl_field_<?php echo $kfield; ?>" class="text mandatory" value="<?php echo $this->data[$kfield]; ?>" />
     <br />
     <?php endif; ?>
   <?php else: ?>
-    <label for="ctrl_field_<?php echo $key; ?>"<?php if($item['mandatory']): ?> class="mandatory"<?php endif; ?>>
-    <?php if($item['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
-    <?php echo $item['name']; ?>
-    <?php if($item['mandatory']): ?><span class="mandatory">*</span><?php endif; ?>
+    <label for="ctrl_field_<?php echo $kfield; ?>"<?php if ($field['mandatory']): ?> class="mandatory"<?php endif; ?>>
+    <?php if ($field['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
+    <?php echo $field['label']; ?>:<?php if ($field['mandatory']): ?> <span class="mandatory">*</span><?php endif; ?>
     </label>
-    <input type="text" name="field_<?php echo $key; ?>" id="ctrl_field_<?php echo $key; ?>" class="text<?php if($item['mandatory']): ?> mandatory<?php endif; ?>" value="<?php echo $item['value']; ?>" />
+    <?php if (isset($this->error['field_'.$kfield])): ?><div class="explanation"><p><?php echo $this->error['field_'.$kfield]; ?></p></div><?php endif; ?>
+    <input type="text" name="field_<?php echo $kfield; ?>" id="ctrl_field_<?php echo $kfield; ?>" class="text<?php if($field['mandatory']): ?> mandatory<?php endif; ?>" value="<?php echo $this->data[$kfield]; ?>" />
     <br />
   <?php endif; ?>
 <?php endforeach; ?>
+<?php if ($this->editing): ?>
+*** NOT YET IMPLEMENTED ***
+<?php else: ?>
+  <label for="ctrl_document" class="mandatory"><span class="invisible"><?php echo $this->lbl_mandatory; ?></span> <?php echo $this->lbl_document; ?>: <span class="mandatory">*</span></label>
   <?php if (isset($this->error['document'])): ?><div class="explanation"><p><?php echo $this->error['document']; ?></p></div><?php endif; ?>
-  <?php if (isset($this->lbl_document_exists)): ?><div class="explanation"><p><?php echo $this->lbl_document_exists; ?></p></div><?php endif; ?>
-  <label for="ctrl_document" class="mandatory"><span class="invisible"><?php echo $this->lbl_mandatory; ?></span> <?php echo $this->lbl_document; ?><span class="mandatory">*</span></label>
-  <input type="file" name="document" id="ctrl_document" class="upload mandatory" />
-  <br />
+  <div id="dz-document">
+    <div class="fallback">
+      <input type="file" name="document[]" id="ctrl_document" />
+    </div>
+    <div id="dz-document-container" class="dz-container" >
+      <div class="dz-default dz-message">
+        <span><?php echo $this->lbl_dropzone; ?></span>
+      </div>
+      <div id="dz-document-preview" class="dropzone-previews"></div>
+    </div>
+  </div>
+<script type="text/javascript">//<![CDATA[
+new Dropzone("#dz-document", {
+  url: "<?php echo $this->href_dropzone; ?>",
+  maxFilesize: <?php echo $this->maxFilesize; ?>,
+  paramName: "document",
+  uploadMultiple: true,
+  addRemoveLinks: true,
+  previewsContainer: "#dz-document-preview",
+  clickable: "#dz-document-container",
+  createImageThumbnails: false,
+  maxFiles: 1,
+  acceptedFiles: "<?php echo $this->acceptedFiles; ?>",
+  dictFallbackMessage: "<?php echo $this->err_dropzone; ?>",
+  dictInvalidFileType: "<?php echo $this->err_filetype; ?>",
+  dictFileTooBig: "<?php echo $this->err_filesize; ?>",
+  dictCancelUpload: "<?php echo $this->but_cancelupload; ?>",
+  dictCancelUploadConfirmation: "<?php echo $this->wrn_cancelupload; ?>",
+  dictRemoveFile: "<?php echo $this->but_removefile; ?>",
+  dictMaxFilesExceeded: "<?php echo $this->err_filecount; ?>",
+  init: function() {
+    var DZ = this;
+    DZ.on("successmultiple", function(files, response) {
+      $.each(files, function(key,file){
+        file.uploaded = response[key];
+      });
+    });
+    DZ.on("removedfile", function(file) {
+      if (file.uploaded) {
+        $.post("<?php echo $this->href_dropzone_cancel; ?>", { pname: 'document', file: file.uploaded });
+      } else if (file.existent) {
+        $.post("<?php echo $this->href_dropzone_cancel; ?>", { pname: 'document', file: file.existent });
+        DZ.options.maxFiles++;
+      }
+    });
+    $.post('<?php echo $this->href_dropzone; ?>', { pname: 'document' }, function(data) {
+      $.each(data, function(key,value){
+        if (value.type != 'removed') {
+          var mockFile = { name: value.name, size: value.size, existent: value };
+          DZ.options.addedfile.call(DZ, mockFile);
+          DZ.options.maxFiles--;
+        }
+      });
+    });
+  }
+});
+//]]></script>
+<?php endif; ?>
 <?php if ($this->attach): ?>
-  <?php if (isset($this->error['attach1'])): ?><div class="explanation"><p><?php echo $this->error['attach1']; ?></p></div><?php endif; ?>
-  <?php if (isset($this->lbl_attach1_exists)): ?>
-  <div class="explanation"><p><?php echo $this->lbl_attach1_exists; ?></p></div>
-  <span><input type="checkbox" name="remove_attach1" id="ctrl_remove_attach1" class="checkbox" value="1" />
-  <label for="ctrl_remove_attach1"><?php echo $this->lbl_remove_attach1; ?></label></span>
-  <?php endif; ?>
-  <label for="ctrl_attach1"> <?php echo $this->lbl_attach1; ?></label>
-  <input type="file" name="attach1" id="ctrl_attach1" class="upload" />
-  <br />
-  <?php if (isset($this->error['attach2'])): ?><div class="explanation"><p><?php echo $this->error['attach2']; ?></p></div><?php endif; ?>
-  <?php if (isset($this->lbl_attach2_exists)): ?>
-  <div class="explanation"><p><?php echo $this->lbl_attach2_exists; ?></p></div>
-  <span><input type="checkbox" name="remove_attach2" id="ctrl_remove_attach2" class="checkbox" value="1" />
-  <label for="ctrl_remove_attach2"><?php echo $this->lbl_remove_attach2; ?></label></span>
-  <?php endif; ?>
-  <label for="ctrl_attach2"> <?php echo $this->lbl_attach2; ?></label>
-  <input type="file" name="attach2" id="ctrl_attach2" class="upload" />
-  <br />
-  <?php if (isset($this->error['attach3'])): ?><div class="explanation"><p><?php echo $this->error['attach3']; ?></p></div><?php endif; ?>
-  <?php if (isset($this->lbl_attach3_exists)): ?>
-  <div class="explanation"><p><?php echo $this->lbl_attach3_exists; ?></p></div>
-  <span><input type="checkbox" name="remove_attach3" id="ctrl_remove_attach3" class="checkbox" value="1" />
-  <label for="ctrl_remove_attach3"><?php echo $this->lbl_remove_attach3; ?></label></span>
-  <?php endif; ?>
-  <label for="ctrl_attach3"> <?php echo $this->lbl_attach3; ?></label>
-  <input type="file" name="attach3" id="ctrl_attach3" class="upload" />
-  <br />
-  <?php if (isset($this->error['attach4'])): ?><div class="explanation"><p><?php echo $this->error['attach4']; ?></p></div><?php endif; ?>
-  <?php if (isset($this->lbl_attach4_exists)): ?>
-  <div class="explanation"><p><?php echo $this->lbl_attach4_exists; ?></p></div>
-  <span><input type="checkbox" name="remove_attach4" id="ctrl_remove_attach4" class="checkbox" value="1" />
-  <label for="ctrl_remove_attach4"><?php echo $this->lbl_remove_attach4; ?></label></span>
-  <?php endif; ?>
-  <label for="ctrl_attach4"> <?php echo $this->lbl_attach4; ?></label>
-  <input type="file" name="attach4" id="ctrl_attach4" class="upload" />
-  <br />
+  <label for="ctrl_attach"> <?php echo $this->lbl_attach; ?>:</label>
+  <?php if (isset($this->error['attach'])): ?><div class="explanation"><p><?php echo $this->error['attach']; ?></p></div><?php endif; ?>
+  <div id="dz-attach">
+    <div class="fallback">
+      <input type="file" name="attach[]" id="ctrl_attach" />
+    </div>
+    <div id="dz-attach-container" class="dz-container" >
+      <div class="dz-default dz-message">
+        <span><?php echo $this->lbl_dropzone; ?></span>
+      </div>
+      <div id="dz-attach-preview" class="dropzone-previews"></div>
+    </div>
+  </div>
+<script type="text/javascript">//<![CDATA[
+new Dropzone("#dz-attach", {
+  url: "<?php echo $this->href_dropzone; ?>",
+  maxFilesize: <?php echo $this->maxFilesize; ?>,
+  paramName: "attach",
+  uploadMultiple: true,
+  addRemoveLinks: true,
+  previewsContainer: "#dz-attach-preview",
+  clickable: "#dz-attach-container",
+  createImageThumbnails: false,
+  maxFiles: 10,
+  acceptedFiles: "<?php echo $this->acceptedFiles; ?>",
+  dictFallbackMessage: "<?php echo $this->err_dropzone; ?>",
+  dictInvalidFileType: "<?php echo $this->err_filetype; ?>",
+  dictFileTooBig: "<?php echo $this->err_filesize; ?>",
+  dictCancelUpload: "<?php echo $this->but_cancelupload; ?>",
+  dictCancelUploadConfirmation: "<?php echo $this->wrn_cancelupload; ?>",
+  dictRemoveFile: "<?php echo $this->but_removefile; ?>",
+  dictMaxFilesExceeded: "<?php echo $this->err_filecount; ?>",
+  init: function() {
+    var DZ = this;
+    DZ.on("successmultiple", function(files, response) {
+      $.each(files, function(key,file){
+        file.uploaded = response[key];
+      });
+    });
+    DZ.on("removedfile", function(file) {
+      if (file.uploaded) {
+        $.post("<?php echo $this->href_dropzone_cancel; ?>", { pname: 'attach', file: file.uploaded });
+      } else if (file.existent) {
+        $.post("<?php echo $this->href_dropzone_cancel; ?>", { pname: 'attach', file: file.existent });
+        DZ.options.maxFiles++;
+      }
+    });
+    $.post('<?php echo $this->href_dropzone; ?>', { pname: 'attach' }, function(data) {
+      $.each(data, function(key,value){
+        if (value.type != 'removed') {
+          var mockFile = { name: value.name, size: value.size, existent: value };
+          DZ.options.addedfile.call(DZ, mockFile);
+          DZ.options.maxFiles--;
+        }
+      });
+    });
+  }
+});
+//]]></script>
 <?php endif; ?>
   <div class="submit_container">
-    <input type="submit" id="ctrl_save" name="_save" class="submit" value="<?php echo $this->lbl_save; ?>" />
-    <input type="submit" id="ctrl_cancel" name="_cancel" class="submit" value="<?php echo $this->lbl_cancel; ?>" />
+    <input type="submit" id="ctrl_save" name="_save" class="submit" value="<?php echo $this->but_save; ?>" />
+    <input type="submit" id="ctrl_cancel" name="_cancel" class="submit" value="<?php echo $this->but_cancel; ?>" />
   </div>
 </div>
 </form>

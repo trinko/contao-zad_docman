@@ -13,48 +13,72 @@
 
 
 /**
- * Miscellaneous
+ * Error messages
  */
-$GLOBALS['TL_LANG']['tl_zad_docman']['err_nologged'] = 'Nessun utente connesso.';
-$GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'] = 'Utente non autorizzato.';
-$GLOBALS['TL_LANG']['tl_zad_docman']['err_id'] = 'Il documento indicato non esiste.';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_nologged'] = 'ATTENZIONE! Nessun utente connesso.';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'] = 'ATTENZIONE! Utente non autorizzato.';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_nofields'] = 'ATTENZIONE! Il modulo non è impostato correttamente.';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_id'] = 'ATTENZIONE! Il documento indicato non esiste.';
 $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'] = 'Devi compilare il campo!';
 $GLOBALS['TL_LANG']['tl_zad_docman']['err_dateformat'] = 'La data non è nel formato corretto!';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_timeformat'] = 'L\'orario non è nel formato corretto!';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_datimformat'] = 'La data e l\'orario non sono nel formato corretto!';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_autovoid'] = 'Il campo automatico non può essere lasciato vuoto!';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_userformat'] = 'L\'utente non esiste o non è scritto nel formato corretto!';
 $GLOBALS['TL_LANG']['tl_zad_docman']['err_file'] = 'Il file non è stato caricato correttamente!';
 $GLOBALS['TL_LANG']['tl_zad_docman']['err_filesize'] = 'La dimensione del file caricato è superiore ai limiti previsti!';
 $GLOBALS['TL_LANG']['tl_zad_docman']['err_filetype'] = 'Il tipo di file caricato non è consentito!';
-$GLOBALS['TL_LANG']['tl_zad_docman']['err_folder'] = 'La cartella in cui caricare il file non esiste!';
-$GLOBALS['TL_LANG']['tl_zad_docman']['err_dlfile'] = 'Il file non esiste!';
-$GLOBALS['TL_LANG']['tl_zad_docman']['err_dldoc'] = 'Il documento non esiste!';
-$GLOBALS['TL_LANG']['tl_zad_docman']['msg_nodata'] = 'Nessun documento presente';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentlist_alt'] = 'Informazioni sui documenti esistenti';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_filecount'] = 'Non puoi caricare altri documenti!';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_dropzone'] = 'Il programma usato non permette di caricare file trascinandoli su questa zona!';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_store'] = 'Impossibile memorizzare il documento nella cartella di destinazione!';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_nofile'] = 'Il file non è stato trovato!';
+$GLOBALS['TL_LANG']['tl_zad_docman']['err_listother'] = 'Devi inserire un valore!';
+
+
+/**
+ * Warning messages
+ */
+$GLOBALS['TL_LANG']['tl_zad_docman']['wrn_nodata'] = 'Nessun documento presente';
+$GLOBALS['TL_LANG']['tl_zad_docman']['wrn_cancelupload'] = 'Sei sicuro di voler annullare il caricamento in corso?';
+
+
+/**
+ * Labels
+ */
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentlist'] = 'Documenti caricati';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_add'] = 'Carica nuovo documento';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_edit'] = 'Modifica';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_delete'] = 'Cancella';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentadd'] = 'Inserisci un nuovo documento';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentedit'] = 'Modifica il documento';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentdelete'] = 'Cancella il documento';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_save'] = 'Salva';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_confirm'] = 'Conferma';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_cancel'] = 'Annulla';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentedit'] = 'Modifica il seguente documento';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentdelete'] = 'Cancella il seguente documento';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentshow'] = 'Anteprima del documento';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_mandatory'] = 'Campo obbligatorio';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document'] = 'Documento';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach1'] = 'Allegato 1';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach2'] = 'Allegato 2';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach3'] = 'Allegato 3';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach4'] = 'Allegato 4';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document_exists'] = 'Documento presente sul sistema, scegline un altro per cambiarlo.';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach1_exists'] = 'Allegato 1 presente sul sistema, scegline un altro per cambiarlo o attiva la casella di rimozione per cancellarlo.';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach2_exists'] = 'Allegato 2 presente sul sistema, scegline un altro per cambiarlo o attiva la casella di rimozione per cancellarlo.';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach3_exists'] = 'Allegato 3 presente sul sistema, scegline un altro per cambiarlo o attiva la casella di rimozione per cancellarlo.';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach4_exists'] = 'Allegato 4 presente sul sistema, scegline un altro per cambiarlo o attiva la casella di rimozione per cancellarlo.';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_remove_attach1'] = 'Rimuove allegato 1';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_remove_attach2'] = 'Rimuove allegato 2';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_remove_attach3'] = 'Rimuove allegato 3';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_remove_attach4'] = 'Rimuove allegato 4';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_fname_attach1'] = 'Allegato_1';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_fname_attach2'] = 'Allegato_2';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_fname_attach3'] = 'Allegato_3';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_fname_attach4'] = 'Allegato_4';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach'] = 'Allegati';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attachnum'] = 'Allegato %s';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_status'] = 'Stato';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_published'] = 'Pubblicato';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_draft'] = 'Bozza';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_waiting'] = 'In attesa di pubblicazione';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_publishedtm'] = 'Pubblicato il %s';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_drafttm'] = 'Bozza (inserito il %s)';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_waitingtm'] = 'In attesa di pubblicazione dal %s';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_dropzone'] = 'Clicca o trascina qui i file per caricarli';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_listother'] = 'Altro';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloaddocument'] = 'Scarica il documento';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloadattach'] = 'Scarica l\'allegato %s';
+
+
+/**
+ * Buttons
+ */
+$GLOBALS['TL_LANG']['tl_zad_docman']['but_save'] = 'Salva';
+$GLOBALS['TL_LANG']['tl_zad_docman']['but_cancel'] = 'Annulla';
+$GLOBALS['TL_LANG']['tl_zad_docman']['but_confirm'] = 'Conferma';
+$GLOBALS['TL_LANG']['tl_zad_docman']['but_add'] = 'Nuovo documento';
+$GLOBALS['TL_LANG']['tl_zad_docman']['but_show'] = 'Anteprima';
+$GLOBALS['TL_LANG']['tl_zad_docman']['but_publish'] = 'Pubblica';
+$GLOBALS['TL_LANG']['tl_zad_docman']['but_unpublish'] = 'Togli pubblicazione';
+$GLOBALS['TL_LANG']['tl_zad_docman']['but_edit'] = 'Modifica';
+$GLOBALS['TL_LANG']['tl_zad_docman']['but_delete'] = 'Cancella';
+$GLOBALS['TL_LANG']['tl_zad_docman']['but_cancelupload'] = 'Annulla';
+$GLOBALS['TL_LANG']['tl_zad_docman']['but_removefile'] = 'Cancella';
 

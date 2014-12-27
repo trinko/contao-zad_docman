@@ -9,13 +9,13 @@
   <input type="hidden" name="REQUEST_TOKEN" value="{{request_token}}" />
   <div class="headline"><p><?php echo $this->header; ?></p></div>
   <ul>
-  <?php foreach($this->fields as $item): ?>
-    <li><?php echo $item['name']; ?>: <?php echo $item['value']; ?></li>
+  <?php foreach($this->values as $item): ?>
+    <li><?php echo $item['label']; ?>: <?php echo $item['value']; ?></li>
   <?php endforeach; ?>
   </ul>
   <div class="submit_container">
-    <input type="submit" id="ctrl_save" name="_confirm" class="submit" value="<?php echo $this->lbl_confirm; ?>" />
-    <input type="submit" id="ctrl_cancel" name="_cancel" class="submit" value="<?php echo $this->lbl_cancel; ?>" />
+    <input type="submit" id="ctrl_save" name="_confirm" class="submit" value="<?php echo $this->but_confirm; ?>" />
+    <input type="submit" id="ctrl_cancel" name="_cancel" class="submit" value="<?php echo $this->but_cancel; ?>" />
   </div>
 </div>
 </form>

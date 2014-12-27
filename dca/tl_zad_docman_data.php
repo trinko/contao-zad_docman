@@ -13,14 +13,14 @@
 
 
 /**
- * Table tl_zad_docman_info
+ * Table tl_zad_docman_data
  */
-$GLOBALS['TL_DCA']['tl_zad_docman_info'] = array(
+$GLOBALS['TL_DCA']['tl_zad_docman_data'] = array(
 	// Configuration
 	'config' => array(
 		'dataContainer'               => 'Table',
 		'sql' => array(
-      'keys'                        => array('id'=>'primary', 'pid'=>'index')
+      'keys'                        => array('id'=>'primary', 'pid'=>'index', 'field'=>'index')
     )
 	),
 	// Fields
@@ -35,7 +35,7 @@ $GLOBALS['TL_DCA']['tl_zad_docman_info'] = array(
 			'sql'                         => "int(10) unsigned NOT NULL default '0'"
 		),
 		'field' => array(
-			'sql'                         => "smallint(5) unsigned NOT NULL default '0'"
+			'sql'                         => "varchar(255) NOT NULL default ''"
 		),
 		'value' => array(
 			'sql'                         => "varchar(255) NOT NULL default ''"

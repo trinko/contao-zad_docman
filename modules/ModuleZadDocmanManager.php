@@ -22,6 +22,7 @@ namespace zad_docman;
  * Class ModuleZadDocmanManager
  *
  * Front end module "Document Manager".
+ *
  * @copyright Antonello Dessì 2014
  * @author    Antonello Dessì
  * @package   zad_docman
@@ -30,31 +31,36 @@ class ModuleZadDocmanManager extends \Module {
 
 	/**
 	 * Template
+	 *
 	 * @var string
 	 */
 	protected $strTemplate = 'zaddm_message';
 
 	/**
 	 * ID of the logged user
+	 *
 	 * @var int
 	 */
 	protected $userId = 0;
 
 	/**
-	 * True if user is a manager
+	 * True if user is a document administrator
+	 *
 	 * @var bool
 	 */
-	protected $isManager = false;
+	protected $isAdmin = false;
 
 	/**
-	 * Document manager data
-	 * @var DocmanModel
+	 * Document Archive table data
+	 *
+	 * @var \ZadDocmanArchiveModel
 	 */
 	protected $docman = null;
 
 
 	/**
 	 * Display a wildcard in the back end
+	 *
 	 * @return string
 	 */
 	public function generate() {
@@ -74,208 +80,214 @@ class ModuleZadDocmanManager extends \Module {
 	 * Generate the module
 	 */
 	protected function compile() {
-    $this->Template = new \FrontendTemplate('zaddm_message');
     // get data
-    $this->docman = \ZadDocmanModel::findByPk($this->zad_docman);
+    $this->docman = \ZadDocmanArchiveModel::findByPk($this->zad_docman_archive);
     if ($this->docman === null || !$this->docman->active) {
-      // no data
+      // no data: exit without any output
+      $this->Template = new \FrontendTemplate('zaddm_message');
       $this->Template->active = false;
       return;
     }
     // check if a member is logged
     if (!FE_USER_LOGGED_IN) {
-      // error no member logged
-      $this->Template->active = true;
-  		$this->Template->referer = $this->createBaseUrl();
-  		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-      $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_nologged'];
+      // error, no member logged
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_nologged'], $this->createBaseUrl());
       return;
     }
     // check logged member
     $this->import('FrontendUser', 'User');
     $this->userId = $this->User->id;
     $groups = deserialize($this->docman->groups);
-    $this->isManager = false;
+    $this->isAdmin = false;
    	if (in_array($this->docman->manager, $this->User->groups)) {
-      // member is manager
-      $this->isManager = true;
+      // member is document administrator
+      $this->isAdmin = true;
     } elseif (!is_array($groups) || empty($groups) || !count(array_intersect($groups, $this->User->groups))) {
-      // member not allowed
-      $this->Template->active = true;
-  		$this->Template->referer = $this->createBaseUrl();
-  		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-      $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'];
+      // error, member not allowed
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $this->createBaseUrl());
       return;
     }
     // get action info
-    $action = \Input::get('zA');
+    $action = \Input::get('zdA');
     switch ($action) {
-      case 'da':  // add document
-        return $this->documentEdit();
-      case 'dax':  // add document exec
-        return $this->documentEditExec();
-      case 'de':  // edit document
-        $id = intval(\Input::get('zD'));
-        return $this->documentEdit($id);
-      case 'dex':  // edit document exec
-        $id = intval(\Input::get('zD'));
-        return $this->documentEditExec($id);
-      case 'dd':  // delete document
-        $id = intval(\Input::get('zD'));
-        return $this->documentDelete($id);
-      case 'ddx':  // delete document exec
-        $id = intval(\Input::get('zD'));
-        return $this->documentDeleteExec($id);
-      case 'fd':  // file download
-        $id = \Input::get('zF');
-        return $this->fileDownload($id);
+      case 'upload':  // upload files
+        $id = intval(\Input::get('zdD'));
+        $this->fileUpload($id);
+        break;
+      case 'cancel':  // cancel uploaded files
+        $id = intval(\Input::get('zdD'));
+        $this->fileCancel($id);
+        break;
+      case 'add':  // add a document
+        $this->documentEdit();
+        break;
+      case 'addx':  // add a document - execute
+        $this->documentEditExec();
+        break;
+      case 'edit':  // edit a document
+        $id = intval(\Input::get('zdD'));
+        $this->documentEdit($id);
+        break;
+      case 'editx':  // edit a document - execute
+        $id = intval(\Input::get('zdD'));
+        $this->documentEditExec($id);
+        break;
+      case 'delete':  // delete a document
+        $id = intval(\Input::get('zdD'));
+        $this->documentDelete($id);
+        break;
+      case 'deletex':  // delete a document - execute
+        $id = intval(\Input::get('zdD'));
+        $this->documentDeleteExec($id);
+        break;
+      case 'publish':  // publish a document
+        $id = intval(\Input::get('zdD'));
+        $this->documentPublish($id);
+        break;
+      case 'unpublish':  // unpublish a document
+        $id = intval(\Input::get('zdD'));
+        $this->documentPublish($id, false);
+        break;
+      case 'show':  // show a document
+        $id = intval(\Input::get('zdD'));
+        $this->documentShow($id);
+        break;
+      case 'download':  // download a file
+        $id = \Input::get('zdF');
+        $this->fileDownload($id);
+        break;
       default:  // list documents
-        $id = intval(\Input::get('zP'));
-        return $this->documentList($id);
+        $id = intval(\Input::get('zdP'));
+        $this->documentList($id);
+        break;
     }
 	}
 
 	/**
-	 * Show document list
+	 * Upload a file
 	 *
-	 * @param int $page  Page number
+	 * @param int $id  ID of the document owner (0=a new one)
 	 */
-	protected function documentList($page=0) {
-    // set template
-    $this->Template = new \FrontendTemplate('zaddm_list');
-    // get info fields
-    $fields = deserialize($this->docman->infoFields);
-    // set base url
-    $base_url = $this->createBaseUrl();
-    // set add url
-    $param['zA'] = 'da';
-    $this->Template->href_add = $this->createUrl($param, $base_url);
-    // pagination
-    $limit = null;
-    $offset = null;
-    $show_others = (!$this->isManager && !$this->docman->enableOthers) ? $this->userId : null;
-    $total = \ZadDocmanDocModel::countDocuments($this->docman->id, $show_others);
-		if ($this->docman->perPage > 0 && $total > $this->docman->perPage) {
-      // adjust page number
-      if ($page < 1) {
-        // first page
-        $page = 1;
-      } elseif ($page > ceil($total / $this->docman->perPage)) {
-        // last page
-        $page = ceil($total / $this->docman->perPage);
+	protected function fileUpload($id) {
+    if ($id > 0) {
+      // check if document exists
+      $doc = \ZadDocmanModel::findByPk($id);
+      if ($doc === null) {
+        // error, invalid id
+        $this->errorUpload($GLOBALS['TL_LANG']['tl_zad_docman']['err_id']);
       }
-			// set limit and offset
-			$limit = $this->docman->perPage;
-			$offset = ($page - 1) * $this->docman->perPage;
-			if ($offset + $limit > $total) {
-				$limit = $total - $offset;
-			}
-			// add the pagination menu
-			$pagination = new \Pagination($total, $this->docman->perPage, $GLOBALS['TL_CONFIG']['maxPaginationLinks'], 'zP');
-			$this->Template->pagination = $pagination->generate("\n  ");
-    }
-    // get docs
-    $data = array();
-    $docs = \ZadDocmanDocModel::findDocuments($this->docman->id, $show_others, $fields, $offset, $limit);
-    if ($docs !== null) {
-      $index = 0;
-      while ($docs->next()) {
-        $param = array();
-        $data[$index]['id'] = $docs->id;
-        // create file download url
-        $data[$index]['href_document'] = null;
-        $file = \FilesModel::findByUuid($docs->document);
-        if ($file !== null) {
-          $param['zF'] = $file->name;
-          $param['zA'] = 'fd';
-          $data[$index]['href_document'] = $this->createUrl($param, $base_url);
-        }
-        if ($docs->attach) {
-          foreach (deserialize($docs->attach) as $key=>$item) {
-            $data[$index]['href_attach'.($key+1)] = null;
-            $file = \FilesModel::findByUuid($item);
-            if ($file !== null) {
-              $param['zF'] = $file->name;
-              $param['zA'] = 'fd';
-              $data[$index]['href_attach'.($key+1)] = $this->createUrl($param, $base_url);
-            }
-          }
-        }
-        // info fields
-        $data[$index]['fields'] = array();
-        $options = array('order' => 'field ASC');
-        $info = \ZadDocmanInfoModel::findByPid($docs->id, $options);
-        if ($info !== null) {
-          while ($info->next()) {
-            if ($fields[$info->field]['type'] == 'choice') {
-              // single choice
-              $list = explode(',', $fields[$info->field]['list']);
-              $value = $list[$info->value];
-            } elseif ($fields[$info->field]['type'] == 'mchoice') {
-              // multi choice
-              $value = array();
-              $list = explode(',', $fields[$info->field]['list']);
-              foreach (deserialize($info->value) as $val) {
-                $value[] = $list[$val];
-              }
-              $value = implode(', ', $value);
-            } elseif ($fields[$info->field]['type'] == 'date') {
-              // date
-              $date = new \Date($info->value);
-              $value = $date->date;
-            } elseif ($fields[$info->field]['type'] == 'auto') {
-              // auto
-              if ($fields[$info->field]['auto_field'] == 'timestamp') {
-                // parse datetime
-                $date = new \Date($info->value);
-                $value = $date->datim;
-              } elseif ($fields[$info->field]['auto_field'] == 'user') {
-                // do nothing
-                $value = $info->value;
-              }
-            } else {
-              // text/number
-              $value = $info->value;
-            }
-            $data[$index]['fields'][$info->field] = $value;
-          }
-        }
-        // buttons
-        if (!$this->isManager && $this->docman->enableOthers && $docs->sentBy != $this->userId) {
-          // user can't edit/delete document
-          $data[$index]['href_edit'] = null;
-          $data[$index]['href_delete'] = null;
-        } else {
-          // user can edit/delete document
-          $param = array();
-          $param['zD'] = $docs->id;
-          $param['zA'] = 'de';
-          $data[$index]['href_edit'] = $this->createUrl($param, $base_url);
-          $param['zA'] = 'dd';
-          $data[$index]['href_delete'] = $this->createUrl($param, $base_url);
-        }
-        $index++;
+      // check owner
+      if (!$this->isAdmin && $doc->sentBy != $this->userId) {
+        // error, user can't edit document
+        $this->errorUpload($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth']);
       }
     }
-    // set other template vars
-    $this->Template->fields = $fields;
-    $this->Template->docs = $data;
-    $this->Template->isManager = $this->isManager;
-    $this->Template->msg_nodata = $GLOBALS['TL_LANG']['tl_zad_docman']['msg_nodata'];
-    $this->Template->lbl_documentlist_alt = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentlist_alt'];
-    $this->Template->lbl_documentlist = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentlist'];
-    $this->Template->lbl_document = ($this->docman->doclabel ?: $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document']);
-    $this->Template->lbl_attach1 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach1'];
-    $this->Template->lbl_attach2 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach2'];
-    $this->Template->lbl_attach3 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach3'];
-    $this->Template->lbl_attach4 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach4'];
-    $this->Template->lbl_add = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_add'];
-    $this->Template->lbl_edit = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_edit'];
-    $this->Template->lbl_delete = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_delete'];
-	}
+    if (empty($_FILES)) {
+      // return files already existent
+      $result  = array();
+      // get file parameter name
+      $pname = \Input::post('pname');
+      if (isset($_SESSION['zad_docman'][$pname])) {
+        // get data from session
+        $result = $_SESSION['zad_docman'][$pname];
+      } elseif ($id > 0 && $pname == 'document') {
+        // get document file info
+        $file = \FilesModel::findByUuid($doc->document);
+        if ($file === null) {
+          // upload error
+          $this->errorUpload($GLOBALS['TL_LANG']['tl_zad_docman']['err_file']);
+        }
+        $obj = array(
+          'type' => 'existent',
+          'uuid' => \String::binToUuid($doc->document),
+          'name' => $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document'].'.'.$file->extension,
+          'ext' => $file->extension,
+          'size' => filesize(TL_ROOT . '/' . $file->path));
+        $result[] = $obj;
+        // save files in session
+        $_SESSION['zad_docman'][$pname][] = $obj;
+      } elseif ($id > 0 && $pname == 'attach') {
+        // get document file info
+        $attach = unserialize($doc->attach);
+        $i = 1;
+        foreach ($attach as $att) {
+          $file = \FilesModel::findByUuid($att);
+          if ($file === null) {
+            // upload error
+            $this->errorUpload($GLOBALS['TL_LANG']['tl_zad_docman']['err_file']);
+          }
+          $obj = array(
+            'type' => 'existent',
+            'uuid' => \String::binToUuid($att),
+            'name' => sprintf($GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attachnum'].'.'.$file->extension, $i),
+            'ext' => $file->extension,
+            'size' => filesize(TL_ROOT . '/' . $file->path));
+          $i++;
+          $result[] = $obj;
+          // save files in session
+          $_SESSION['zad_docman'][$pname][] = $obj;
+        }
+      }
+      // send back file info and exit
+      header('Content-type: application/json');
+      echo(json_encode($result));
+      die();
+    } elseif (isset($_FILES['document'])) {
+      // upload document
+      $this->saveUploadedFiles($id, 'document', $_FILES['document']);
+    } elseif (isset($_FILES['attach'])) {
+      // upload attachments
+      $this->saveUploadedFiles($id, 'attach', $_FILES['attach']);
+    } else {
+      // upload error
+      $this->errorUpload($GLOBALS['TL_LANG']['tl_zad_docman']['err_file']);
+    }
+  }
 
 	/**
-	 * Show the form for editing a document
+	 * Cancel an uploaded a file
+	 *
+	 * @param int $id  ID of the document to edit (0=a new one)
+	 */
+	protected function fileCancel($id) {
+    if ($id > 0) {
+      // check if document exists
+      $doc = \ZadDocmanModel::findByPk($id);
+      if ($doc === null) {
+        // error, invalid id
+        $this->errorUpload($GLOBALS['TL_LANG']['tl_zad_docman']['err_id']);
+      }
+      // check owner
+      if (!$this->isAdmin && $doc->sentBy != $this->userId) {
+        // error, user can't edit document
+        $this->errorUpload($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth']);
+      }
+    }
+    // delete uploaded files
+    $pname = \Input::post('pname');
+    $file = \Input::post('file');
+    if ($file) {
+      // remove files from session
+      $this->import('Files');
+      foreach ($_SESSION['zad_docman'][$pname] as $kfl=>$fl) {
+        if ($fl['uuid'] == $file['uuid']) {
+          // found: remove
+          if ($file['type'] == 'uploaded') {
+            // delete uploaded file
+            $this->Files->delete('system/tmp/' . $file['uuid']);
+            unset($_SESSION['zad_docman'][$pname][$kfl]);
+          } elseif ($file['type'] == 'existent') {
+            // remove later
+            $_SESSION['zad_docman'][$pname][$kfl]['type'] = 'removed';
+          }
+          break;
+        }
+      }
+    }
+  }
+
+	/**
+	 * Show the form for creating/editing a document
 	 *
 	 * @param int $id  ID of the document to edit (0=add a new one)
 	 */
@@ -286,97 +298,104 @@ class ModuleZadDocmanManager extends \Module {
     $this->Template = new \FrontendTemplate('zaddm_edit');
     // set base url
     $base_url = $this->createBaseUrl();
-    // get info fields
-    $fields = deserialize($this->docman->infoFields);
+    // get field data
+    $fields = $this->getFields();
+    if (empty($fields)) {
+      // error, no fields
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_nofields'], $base_url);
+      return;
+    }
     if ($id > 0) {
       // edit a document
-      $param['zA'] = 'dex';
-      $param['zD'] = $id;
+      $param['zdA'] = 'editx';
+      $param['zdD'] = $id;
       $this->Template->href_action = $this->createUrl($param, $base_url);
       $this->Template->header = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentedit'];
-      // get doc
-      $doc = \ZadDocmanDocModel::findByPk($id);
+      // get document
+      $doc = \ZadDocmanModel::findByPk($id);
       if ($doc === null) {
-        // invalid id
-        $this->Template = new \FrontendTemplate('zaddm_message');
-        $this->Template->active = true;
-    		$this->Template->referer = $base_url;
-    		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-        $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_id'];
+        // error, invalid id
+        $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_id'], $base_url);
         return;
       }
-      if (!$this->isManager && $doc->sentBy != $this->userId) {
-        // user can't edit document
-        $this->Template = new \FrontendTemplate('zaddm_message');
-        $this->Template->active = true;
-    		$this->Template->referer = $base_url;
-    		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-        $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'];
+      // check owner
+      if (!$this->isAdmin && $doc->sentBy != $this->userId) {
+        // error, user can't edit document
+        $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
         return;
       }
-      // info fields
-      $options = array('order' => 'field ASC');
-      $info = \ZadDocmanInfoModel::findByPid($doc->id, $options);
-      if ($info !== null) {
+      // check if published
+      if (!$this->isAdmin) {
+        $waiting_time = intval(substr($this->docman->waitingTime, 3)) * 3600;
+        if ($doc->published && ($doc->publishedTimestamp + $waiting_time) < time()) {
+          // error, user can't change a published document
+          $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
+          return;
+        }
+      }
+      // data
+      $data = array();
+      $dataobj = \ZadDocmanDataModel::findByPid($id);
+      if ($dataobj !== null) {
         // get data
-        while ($info->next()) {
-          if ($fields[$info->field]['type'] == 'date') {
-            // date
-            $date = new \Date($info->value);
-            $fields[$info->field]['value'] = $date->date;
-          } elseif ($fields[$info->field]['type'] == 'auto' && $fields[$info->field]['auto_field'] == 'timestamp') {
-            // auto:timestamp
-            $date = new \Date($info->value);
-            $fields[$info->field]['value'] = $date->datim;
-          } else {
-            // string/number/choice/mchoice
-            $fields[$info->field]['value'] = $info->value;
-          }
-        }
-      } else {
-        // reset values on error
-        foreach ($fields as $key=>$value) {
-          $fields[$key]['value'] = null;
+        while ($dataobj->next()) {
+          $data[$dataobj->field] = $dataobj->value;
         }
       }
-      // document
-      $this->Template->lbl_document_exists = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document_exists'];
-      $_SESSION['zad_docman']['document']['uuid'] = $doc->document;
-      // file attach
-      if ($this->docman->enableAttach && !empty($doc->attach)) {
-        foreach (deserialize($doc->attach) as $key=>$item) {
-          $fieldname = 'lbl_attach'.($key+1).'_exists';
-          $this->Template->$fieldname = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach'.($key+1).'_exists'];
-          $_SESSION['zad_docman']['attach'.($key+1)]['uuid'] = $item;
+      foreach ($fields as $kfld=>$fld) {
+        if (!isset($data[$kfld])) {
+          // reset value
+          $data[$kfld] = '';
+        } else {
+          // value
+          $data[$kfld] = $this->formatFieldForm($kfld, $data[$kfld], $fld);
         }
       }
     } else {
       // add a new document
-      $param['zA'] = 'dax';
+      $param['zdA'] = 'addx';
       $this->Template->href_action = $this->createUrl($param, $base_url);
       $this->Template->header = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentadd'];
-      // info fields
-      foreach ($fields as $key=>$value) {
-        $fields[$key]['value'] = null;
+      // data
+      $data = array();
+      foreach ($fields as $kfld=>$fld) {
+        // set defualt
+        $data[$kfld] = $this->formatFieldForm($kfld, null, $fld);
       }
     }
+    // set dropzone css and javascript
+    $GLOBALS['TL_CSS'][] = 'system/modules/zad_docman/vendor/dropzone-3.10.2/css/dropzone.min.css';
+    $GLOBALS['TL_JAVASCRIPT'][] = 'system/modules/zad_docman/vendor/dropzone-3.10.2/js/dropzone.min.js';
+    // set dropzone urls
+    $param = array();
+    $param['zdA'] = 'upload';
+    $param['zdD'] = $id;
+    $this->Template->href_dropzone = $this->createUrl($param, $base_url, false);
+    $param['zdA'] = 'cancel';
+    $this->Template->href_dropzone_cancel = $this->createUrl($param, $base_url, false);
     // set other template vars
-    $this->Template->isManager = $this->isManager;
+    $this->Template->isAdmin = $this->isAdmin;
     $this->Template->error = array();
     $this->Template->fields = $fields;
+    $this->Template->data = $data;
     $this->Template->attach = $this->docman->enableAttach;
-    $this->Template->lbl_document = ($this->docman->doclabel ?: $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document']);
-    $this->Template->lbl_attach1 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach1'];
-    $this->Template->lbl_attach2 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach2'];
-    $this->Template->lbl_attach3 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach3'];
-    $this->Template->lbl_attach4 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach4'];
-    $this->Template->lbl_remove_attach1 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_remove_attach1'];
-    $this->Template->lbl_remove_attach2 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_remove_attach2'];
-    $this->Template->lbl_remove_attach3 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_remove_attach3'];
-    $this->Template->lbl_remove_attach4 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_remove_attach4'];
+    $this->Template->editing = $this->docman->editing;
+    $this->Template->maxFilesize = intVal(\Config::get('maxFileSize') / (1024 * 1024));
+    $this->Template->acceptedFiles = implode(',', array_map(function($a) { return '.'.$a; }, trimsplit(',', strtolower($this->docman->fileTypes))));
+    $this->Template->lbl_document = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document'];
+    $this->Template->lbl_attach = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach'];
     $this->Template->lbl_mandatory = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_mandatory'];
-    $this->Template->lbl_save = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_save'];
-    $this->Template->lbl_cancel = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_cancel'];
+    $this->Template->lbl_dropzone = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_dropzone'];
+    $this->Template->lbl_listother = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_listother'];
+    $this->Template->but_save = $GLOBALS['TL_LANG']['tl_zad_docman']['but_save'];
+    $this->Template->but_cancel = $GLOBALS['TL_LANG']['tl_zad_docman']['but_cancel'];
+    $this->Template->but_removefile = $GLOBALS['TL_LANG']['tl_zad_docman']['but_removefile'];
+    $this->Template->but_cancelupload = $GLOBALS['TL_LANG']['tl_zad_docman']['but_cancelupload'];
+    $this->Template->wrn_cancelupload = $GLOBALS['TL_LANG']['tl_zad_docman']['wrn_cancelupload'];
+    $this->Template->err_filetype = $GLOBALS['TL_LANG']['tl_zad_docman']['err_filetype'];
+    $this->Template->err_filesize = $GLOBALS['TL_LANG']['tl_zad_docman']['err_filesize'];
+    $this->Template->err_filecount = $GLOBALS['TL_LANG']['tl_zad_docman']['err_filecount'];
+    $this->Template->err_dropzone = $GLOBALS['TL_LANG']['tl_zad_docman']['err_dropzone'];
   }
 
 	/**
@@ -389,221 +408,320 @@ class ModuleZadDocmanManager extends \Module {
     $error = array();
     // set base url
     $base_url = $this->createBaseUrl();
-    // get info fields
-    $fields = deserialize($this->docman->infoFields);
-    // security check
+    // get field data
+    $fields = $this->getFields();
+    if (empty($fields)) {
+      // error, no fields
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_nofields'], $base_url);
+      return;
+    }
     if ($id > 0) {
-      // edit a document
-      $doc = \ZadDocmanDocModel::findByPk($id);
+      // get document
+      $doc = \ZadDocmanModel::findByPk($id);
       if ($doc === null) {
-        // invalid id
-        $this->Template = new \FrontendTemplate('zaddm_message');
-        $this->Template->active = true;
-    		$this->Template->referer = $base_url;
-    		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-        $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_id'];
+        // error, invalid id
+        $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_id'], $base_url);
         return;
       }
-      if (!$this->isManager && $doc->sentBy != $this->userId) {
-        // user can't edit document
-        $this->Template = new \FrontendTemplate('zaddm_message');
-        $this->Template->active = true;
-    		$this->Template->referer = $base_url;
-    		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-        $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'];
+      // check owner
+      if (!$this->isAdmin && $doc->sentBy != $this->userId) {
+        // error, user can't edit document
+        $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
         return;
+      }
+      // check if published
+      if (!$this->isAdmin) {
+        $waiting_time = intval(substr($this->docman->waitingTime, 3)) * 3600;
+        if ($doc->published && ($doc->publishedTimestamp + $waiting_time) < time()) {
+          // error, user can't change a published document
+          $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
+          return;
+        }
       }
     }
     if (strlen(\Input::post('_save')) == 0) {
-      // cancel button pressed
+      // cancel button pressed: remove uploaded files and exit
+      $this->import('Files');
+      if (isset($_SESSION['zad_docman']['document'])) {
+        foreach ($_SESSION['zad_docman']['document'] as $file) {
+          if ($file['type'] == 'uploaded') {
+            // delete uploaded file
+            $this->Files->delete('system/tmp/' . $file['uuid']);
+          }
+        }
+      }
+      if (isset($_SESSION['zad_docman']['attach'])) {
+        foreach ($_SESSION['zad_docman']['attach'] as $file) {
+          if ($file['type'] == 'uploaded') {
+            // delete uploaded file
+            $this->Files->delete('system/tmp/' . $file['uuid']);
+          }
+        }
+      }
       $this->redirect($base_url);
     }
-    // check info data
-    foreach ($fields as $key=>$item) {
-      $fields[$key]['value'] = \Input::post('field_'.$key);
-      if (!is_array($fields[$key]['value'])) {
-        $fields[$key]['value'] = trim($fields[$key]['value']);
+    // validate data
+    $data = array();
+    $sentBy = null;
+    foreach ($fields as $kfld=>$fld) {
+      $data[$kfld] = \Input::post('field_'.$kfld);
+      if (!is_array($data[$kfld])) {
+        $data[$kfld] = trim($data[$kfld]);
       }
-      if ($item['type'] == 'number') {
-        // type number
-        $fields[$key]['value'] = intval($fields[$key]['value']);
-        if ($item['mandatory'] && $fields[$key]['value'] == 0) {
-          // no data
-          $error['field_'.$key] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
-        }
-      } elseif ($item['type'] == 'date') {
-        // type date
-        if ($item['mandatory'] && empty($fields[$key]['value'])) {
-          // no data
-          $error['field_'.$key] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
-        } elseif (!empty($fields[$key]['value'])) {
-          // check format
-          $date = new \Date($fields[$key]['value'], $GLOBALS['TL_CONFIG']['dateFormat']);
-          if (!$date || $date->date != $fields[$key]['value']) {
-            // invalid format
-            $error['field_'.$key] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_dateformat'];
-          } else {
-            // ok, save as timestamp
-            $fields[$key]['value'] = $date->timestamp;
+      switch ($fld['type']) {
+        case 't_number':
+        case 't_sequence':
+          // type number
+          $data[$kfld] = intval($data[$kfld]);
+          if ($fld['mandatory'] && $data[$kfld] == 0) {
+            // no data
+            $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
           }
-        }
-      } elseif ($item['type'] == 'choice') {
-        // type single choice
-        $fields[$key]['value'] = intval($fields[$key]['value']);
-      } elseif ($item['type'] == 'mchoice') {
-        // type multi choice
-        if ($item['mandatory'] && (empty($fields[$key]['value']) || count($fields[$key]['value']) == 0)) {
-          // no data
-          $error['field_'.$key] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
-        } else {
-          // serialize array
-          $fields[$key]['value'] = serialize($fields[$key]['value']);
-        }
-      } elseif ($item['type'] == 'auto') {
-        // type auto
-        if ($item['auto_field'] == 'timestamp') {
-          // timestamp field
-          if (empty($fields[$key]['value']) || !$this->isManager || !$item['auto_editable']) {
-            // default
-            $fields[$key]['value'] = time();
-          } else {
+          break;
+        case 't_date':
+          // type date
+          if ($fld['mandatory'] && empty($data[$kfld])) {
+            // no data
+            $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
+          } elseif (!empty($data[$kfld])) {
             // check format
-            $date = new \Date($fields[$key]['value'], $GLOBALS['TL_CONFIG']['datimFormat']);
-            if (!$date || $date->datim != $fields[$key]['value']) {
-              // invalid format, default value
-              $fields[$key]['value'] = time();
+            try {
+              $date = new \Date($data[$kfld], $GLOBALS['TL_CONFIG']['dateFormat']);
+            } catch (\Exception $e) {
+              // invalid format
+              $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_dateformat'];
+            }
+            if ($date && $date->date != $data[$kfld]) {
+              // invalid format
+              $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_dateformat'];
             } else {
-              // valid format, store as timestamp
-              $fields[$key]['value'] = $date->timestamp;
+              // ok, save it as timestamp
+              $data[$kfld] = $date->timestamp;
             }
           }
-        } elseif ($item['auto_field'] == 'user') {
-          // user field
-          $user = \MemberModel::findByPk($this->userId);
-          $username = ($user === null) ? '?' : $user->lastname.' '.$user->firstname;
-          if (empty($fields[$key]['value']) || !$this->isManager || !$item['auto_editable']) {
-            // default
-            $fields[$key]['value'] = $username;
-          } else {
-            // check user
-            $cond_fields = array("concat(tl_member.lastname,' ',tl_member.firstname)='".$fields[$key]['value']."'");
-            $options = array('limit' => 1);
-            $user = \MemberModel::findBy($cond_fields, null, $options);
-            $fields[$key]['value'] = ($user === null) ? $username : $user->lastname.' '.$user->firstname;
+          break;
+        case 't_time':
+          // type time
+          if ($fld['mandatory'] && empty($data[$kfld])) {
+            // no data
+            $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
+          } elseif (!empty($data[$kfld])) {
+            // check format
+            try {
+              $date = new \Date($data[$kfld], $GLOBALS['TL_CONFIG']['timeFormat']);
+            } catch (\Exception $e) {
+              // invalid format
+              $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_timeformat'];
+            }
+            if ($date && $date->time != $data[$kfld]) {
+              // invalid format
+              $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_timeformat'];
+            } else {
+              // ok, save it as timestamp
+              $data[$kfld] = $date->timestamp;
+            }
           }
-        }
-      } else {
-        // type text
-        $fields[$key]['value'] = trim($fields[$key]['value']);
-        if ($item['mandatory'] && empty($fields[$key]['value'])) {
-          // no data
-          $error['field_'.$key] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
-        }
+          break;
+        case 't_datetime':
+          // type datetime
+          if ($fld['mandatory'] && empty($data[$kfld])) {
+            // no data
+            $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
+          } elseif (!empty($data[$kfld])) {
+            // check format
+            try {
+              $date = new \Date($data[$kfld], $GLOBALS['TL_CONFIG']['datimFormat']);
+            } catch (\Exception $e) {
+              // invalid format
+              $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_datimformat'];
+            }
+            if ($date && $date->datim != $data[$kfld]) {
+              // invalid format
+              $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_datimformat'];
+            } else {
+              // ok, save it as timestamp
+              $data[$kfld] = $date->timestamp;
+            }
+          }
+          break;
+        case 't_choice':
+          // type single choice
+          if ($fld['mandatory'] && empty($data[$kfld])) {
+            // no data
+            $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
+          } elseif ($fld['listOther'] && $data[$kfld] == '__OTHER__' && \Input::post('field_'.$kfld.'__OTHER__') == null) {
+            // other option is void
+            $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_listother'];
+          }
+          break;
+        case 't_mchoice':
+          // type multi choice
+          if ($fld['mandatory'] && (empty($data[$kfld]) || count($data[$kfld]) == 0)) {
+            // no data
+            $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
+          } elseif ($fld['listOther'] && !empty($data[$kfld]) && in_array('__OTHER__', $data[$kfld]) && \Input::post('field_'.$kfld.'__OTHER__') == null) {
+            // other option is void
+            $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_listother'];
+          }
+          break;
+        case 't_auto':
+          // type auto
+          if ($fld['autofield'] == 'af_timestamp') {
+            // timestamp automatic field
+            if ($this->isAdmin) {
+              // admin can change timestamp
+              if (empty($data[$kfld])) {
+                // no data
+                $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_autovoid'];
+              } else {
+                // check format
+                try {
+                  $date = new \Date($data[$kfld], $GLOBALS['TL_CONFIG']['datimFormat']);
+                } catch (\Exception $e) {
+                  // invalid format
+                  $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_datimformat'];
+                }
+                if ($date && $date->datim != $data[$kfld]) {
+                  // invalid format
+                  $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_datimformat'];
+                } else {
+                  // ok, save it as timestamp
+                  $data[$kfld] = $date->timestamp;
+                }
+              }
+            } else {
+              // no admin, set automatic value
+              $data[$kfld] = time();
+            }
+          } elseif ($fld['autofield'] == 'af_user') {
+            // user field
+            if ($this->isAdmin) {
+              // admin can change user
+              if (empty($data[$kfld])) {
+                // no data
+                $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_autovoid'];
+              } else {
+                // check user
+                $cond = array("concat(tl_member.lastname,' ',tl_member.firstname)='".$data[$kfld]."'");
+                $options = array('limit' => 1);
+                $user = \MemberModel::findBy($cond, null, $options);
+                if ($user === null) {
+                  // invalid format
+                  $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_userformat'];
+                } else {
+                  // ok, save it as userId
+                  $data[$kfld] = $user->id;
+                  $sentBy = $user->id;
+                }
+              }
+            } else {
+              // no admin, set automatic value
+              $data[$kfld] = $this->userId;
+              $sentBy = $this->userId;
+            }
+          }
+        default:
+          // type text
+          if ($fld['mandatory'] && empty($data[$kfld])) {
+            // no data
+            $error['field_'.$kfld] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
+          }
+          break;
       }
     }
     // check file document
-    if (!isset($_SESSION['zad_docman']['document']) && (!isset($_FILES['document']) || empty($_FILES['document']['name']))) {
+    if (!isset($_SESSION['zad_docman']['document'])) {
       // no document
       $error['document'] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
-    } elseif (isset($_FILES['document']) && !empty($_FILES['document']['name'])) {
-      // save document
-      $err = $this->saveFileAttachment('document');
-      if ($err !== null) {
-        // upload error
-        $error['document'] = $err;
+    } else {
+      $cnt = 0;
+      foreach ($_SESSION['zad_docman']['document'] as $fl) {
+        if ($fl['type'] != 'removed') {
+          $cnt++;
+          break;
+        }
       }
-    }
-    // check file attach 1
-    if ($this->docman->enableAttach && isset($_FILES['attach1']) && !empty($_FILES['attach1']['name'])) {
-      // save file
-      $err = $this->saveFileAttachment('attach1');
-      if ($err !== null) {
-        // upload error
-        $error['attach1'] = $err;
+      if ($cnt == 0) {
+        // no document
+        $error['document'] = $GLOBALS['TL_LANG']['tl_zad_docman']['err_mandatory'];
       }
-    } elseif (isset($_SESSION['zad_docman']['attach1']) && \Input::post('remove_attach1')) {
-        // remove file
-        $this->deleteFileAttachment('attach1');
-    }
-    // check file attach 2
-    if ($this->docman->enableAttach && isset($_FILES['attach2']) && !empty($_FILES['attach2']['name'])) {
-      // save file
-      $err = $this->saveFileAttachment('attach2');
-      if ($err !== null) {
-        // upload error
-        $error['attach2'] = $err;
-      }
-    } elseif (isset($_SESSION['zad_docman']['attach2']) && \Input::post('remove_attach2')) {
-        // remove file
-        $this->deleteFileAttachment('attach2');
-    }
-    // check file attach 3
-    if ($this->docman->enableAttach && isset($_FILES['attach3']) && !empty($_FILES['attach3']['name'])) {
-      // save file
-      $err = $this->saveFileAttachment('attach3');
-      if ($err !== null) {
-        // upload error
-        $error['attach3'] = $err;
-      }
-    } elseif (isset($_SESSION['zad_docman']['attach3']) && \Input::post('remove_attach3')) {
-        // remove file
-        $this->deleteFileAttachment('attach3');
-    }
-    // check file attach 4
-    if ($this->docman->enableAttach && isset($_FILES['attach4']) && !empty($_FILES['attach4']['name'])) {
-      // save file
-      $err = $this->saveFileAttachment('attach4');
-      if ($err !== null) {
-        // upload error
-        $error['attach4'] = $err;
-      }
-    } elseif (isset($_SESSION['zad_docman']['attach4']) && \Input::post('remove_attach4')) {
-        // remove file
-        $this->deleteFileAttachment('attach4');
     }
     // save or show errors
     if (empty($error)) {
       // save document
       if ($id == 0) {
         // new document
-  		  $doc = new \ZadDocmanDocModel();
+  		  $doc = new \ZadDocmanModel();
       }
       $doc->pid = $this->docman->id;
       $doc->tstamp = time();
-      $doc->document = $this->storefile('document');
-      $attach_ids = array();
-      for ($key = 1; $key <= 4; $key++) {
-        if (isset($_SESSION['zad_docman']['attach'.$key])) {
-          $attach_ids[] = $this->storefile('attach'.$key);
+      $doc->save(); // create new id
+      $uuid_list = $this->storeFiles($_SESSION['zad_docman']['document'], $doc->id);
+      if ($uuid_list == NULL) {
+        // error, can't store file
+        $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_store'], $base_url);
+        return;
+      }
+      $doc->document = $uuid_list[0];
+      $uuid_list = array();
+      if ($this->docman->enableAttach && isset($_SESSION['zad_docman']['attach'])) {
+        $cnt = 0;
+        foreach ($_SESSION['zad_docman']['attach'] as $fl) {
+          if ($fl['type'] != 'removed') {
+            $cnt++;
+            break;
+          }
+        }
+        $uuid_list = $this->storeFiles($_SESSION['zad_docman']['attach'], $doc->id);
+        if ($uuid_list == NULL && $cnt > 0) {
+          // error, can't store file
+          $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_store'], $base_url);
+          return;
         }
       }
-      $doc->attach = (count($attach_ids) > 0) ? serialize($attach_ids) : null;
-      $doc->sentBy = $this->userId;
+      $doc->attach = serialize($uuid_list);
+      $doc->published = '';
+      $doc->publishedTimestamp = 0;
+      $doc->sentBy = ($sentBy != NULL) ? $sentBy : $this->userId;
       $doc->save();
-      // save info
-      foreach ($fields as $key=>$item) {
+      // save data
+      foreach ($fields as $kfld=>$fld) {
         if ($id > 0) {
           // existent data
-          $cond[0] = 'tl_zad_docman_info.pid='.$doc->id;
-          $cond[1] = 'tl_zad_docman_info.field='.$key;
+          $cond[0] = "tl_zad_docman_data.pid=$id";
+          $cond[1] = "tl_zad_docman_data.field='$kfld'";
           $options = array('limit' => 1);
-          $info = \ZadDocmanInfoModel::findBy($cond, null, $options);
+          $info = \ZadDocmanDataModel::findBy($cond, null, $options);
           if ($info === null) {
             // on error, create a new one
-            $info = new \ZadDocmanInfoModel();
+            $info = new \ZadDocmanDataModel();
           }
         } else {
           // new data
-  		    $info = new \ZadDocmanInfoModel();
+  		    $info = new \ZadDocmanDataModel();
         }
         $info->pid = $doc->id;
         $info->tstamp = $doc->tstamp;
-        $info->field = $key;
-        $info->value = $item['value'];
+        $info->field = $kfld;
+        if ($fld['type'] == 't_choice' && $fld['listOther'] && $data[$kfld] == '__OTHER__') {
+          // other option selected in list
+          $info->value = '__OTHER__:' . \Input::post('field_'.$kfld.'__OTHER__');
+        } elseif ($fld['type'] == 't_mchoice') {
+          // multi choice list
+          if ($fld['listOther'] && in_array('__OTHER__', $data[$kfld])) {
+            // other option selected in list
+            if (substr(end($data[$kfld]), 0, 10) == '__OTHER__:') {
+              unset($data[$kfld][key($data[$kfld])]);
+            }
+            $data[$kfld][] = '__OTHER__:' . \Input::post('field_'.$kfld.'__OTHER__');
+          }
+          $info->value = serialize($data[$kfld]);
+        } else {
+          // save data
+          $info->value = $data[$kfld];
+        }
         $info->save();
       }
-      // remove old files
-      $this->removeFiles();
       // go to document list
       $this->redirect($base_url);
     } else {
@@ -611,56 +729,68 @@ class ModuleZadDocmanManager extends \Module {
       $this->Template = new \FrontendTemplate('zaddm_edit');
       if ($id > 0) {
          // edit a document
-        $param['zA'] = 'dex';
-        $param['zD'] = $id;
+        $param['zdA'] = 'editx';
+        $param['zdD'] = $id;
         $this->Template->href_action = $this->createUrl($param, $base_url);
         $this->Template->header = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentedit'];
       } else {
          // add a document
-        $param['zA'] = 'dax';
+        $param['zdA'] = 'addx';
         $this->Template->href_action = $this->createUrl($param, $base_url);
         $this->Template->header = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentadd'];
       }
-      // document
-      if (isset($_SESSION['zad_docman']['document'])) {
-        $this->Template->lbl_document_exists = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document_exists'];
-      }
-      // file attach
-      for ($key = 1; $key <= 4; $key++) {
-        if (isset($_SESSION['zad_docman']['attach'.$key])) {
-          $fieldname = 'lbl_attach'.$key.'_exists';
-          $this->Template->$fieldname = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach'.$key.'_exists'];
+      // change format to show data
+      foreach ($fields as $kfld=>$fld) {
+        if (!isset($error['field_'.$kfld])) {
+          if ($fld['type'] == 't_choice' && $fld['listOther'] && $data[$kfld] == '__OTHER__') {
+            // other option selected in list
+            $data[$kfld] = '__OTHER__:' . \Input::post('field_'.$kfld.'__OTHER__');
+          } elseif ($fld['type'] == 't_mchoice' && $fld['listOther'] && in_array('__OTHER__', $data[$kfld])) {
+            // other option selected in list
+            if (substr(end($data[$kfld]), 0, 10) == '__OTHER__:') {
+              unset($data[$kfld][key($data[$kfld])]);
+            }
+            $data[$kfld][] = '__OTHER__:' . \Input::post('field_'.$kfld.'__OTHER__');
+          } else {
+            // change data
+            $data[$kfld] = $this->formatFieldForm($kfld, $data[$kfld], $fld);
+          }
         }
       }
-      // check data
-      foreach ($fields as $key=>$item) {
-        if ($item['type'] == 'date') {
-          // type date
-          $date = new \Date($fields[$key]['value']);
-          $fields[$key]['value'] = $date->date;
-        } elseif ($item['type'] == 'auto' && $item['auto_field'] == 'timestamp') {
-          // type auto:timestamp
-          $date = new \Date($fields[$key]['value']);
-          $fields[$key]['value'] = $date->datim;
-        }
-      }
-      // other template vars
-      $this->Template->isManager = $this->isManager;
+      // set dropzone css and javascript
+      $GLOBALS['TL_CSS'][] = 'system/modules/zad_docman/vendor/dropzone-3.10.2/css/dropzone.min.css';
+      $GLOBALS['TL_JAVASCRIPT'][] = 'system/modules/zad_docman/vendor/dropzone-3.10.2/js/dropzone.min.js';
+      // set dropzone urls
+      $param = array();
+      $param['zdA'] = 'upload';
+      $param['zdD'] = $id;
+      $this->Template->href_dropzone = $this->createUrl($param, $base_url, false);
+      $param['zdA'] = 'cancel';
+      $this->Template->href_dropzone_cancel = $this->createUrl($param, $base_url, false);
+      // set other template vars
+      $this->Template->isAdmin = $this->isAdmin;
       $this->Template->error = $error;
       $this->Template->fields = $fields;
+      $this->Template->data = $data;
       $this->Template->attach = $this->docman->enableAttach;
-      $this->Template->lbl_document = ($this->docman->doclabel ?: $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document']);
-      $this->Template->lbl_attach1 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach1'];
-      $this->Template->lbl_attach2 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach2'];
-      $this->Template->lbl_attach3 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach3'];
-      $this->Template->lbl_attach4 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach4'];
-      $this->Template->lbl_remove_attach1 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_remove_attach1'];
-      $this->Template->lbl_remove_attach2 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_remove_attach2'];
-      $this->Template->lbl_remove_attach3 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_remove_attach3'];
-      $this->Template->lbl_remove_attach4 = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_remove_attach4'];
+      $this->Template->editing = $this->docman->editing;
+      $this->Template->maxFilesize = intVal(\Config::get('maxFileSize') / (1024 * 1024));
+      $this->Template->acceptedFiles = implode(',', array_map(function($a) { return '.'.$a; }, trimsplit(',', strtolower($this->docman->fileTypes))));
+      $this->Template->lbl_document = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document'];
+      $this->Template->lbl_attach = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach'];
       $this->Template->lbl_mandatory = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_mandatory'];
-      $this->Template->lbl_save = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_save'];
-      $this->Template->lbl_cancel = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_cancel'];
+      $this->Template->lbl_dropzone = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_dropzone'];
+      $this->Template->lbl_listother = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_listother'];
+      $this->Template->but_save = $GLOBALS['TL_LANG']['tl_zad_docman']['but_save'];
+      $this->Template->but_cancel = $GLOBALS['TL_LANG']['tl_zad_docman']['but_cancel'];
+      $this->Template->but_removefile = $GLOBALS['TL_LANG']['tl_zad_docman']['but_removefile'];
+      $this->Template->but_cancelupload = $GLOBALS['TL_LANG']['tl_zad_docman']['but_cancelupload'];
+      $this->Template->wrn_cancelupload = $GLOBALS['TL_LANG']['tl_zad_docman']['wrn_cancelupload'];
+      $this->Template->err_filetype = $GLOBALS['TL_LANG']['tl_zad_docman']['err_filetype'];
+      $this->Template->err_filesize = $GLOBALS['TL_LANG']['tl_zad_docman']['err_filesize'];
+      $this->Template->err_filecount = $GLOBALS['TL_LANG']['tl_zad_docman']['err_filecount'];
+      $this->Template->err_dropzone = $GLOBALS['TL_LANG']['tl_zad_docman']['err_dropzone'];
+      $this->Template->err_listother = $GLOBALS['TL_LANG']['tl_zad_docman']['err_listother'];
     }
   }
 
@@ -670,79 +800,68 @@ class ModuleZadDocmanManager extends \Module {
 	 * @param int $id  ID of the document to delete
 	 */
 	protected function documentDelete($id) {
-    // get info fields
-    $fields = deserialize($this->docman->infoFields);
     // set base url
     $base_url = $this->createBaseUrl();
-    // get doc
-    $doc = \ZadDocmanDocModel::findByPk($id);
+    // get field data
+    $fields = $this->getFields();
+    if (empty($fields)) {
+      // error, no fields
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_nofields'], $base_url);
+      return;
+    }
+    // get document
+    $doc = \ZadDocmanModel::findByPk($id);
     if ($doc === null) {
-      // invalid id
-      $this->Template = new \FrontendTemplate('zaddm_message');
-      $this->Template->active = true;
-  		$this->Template->referer = $base_url;
-  		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-      $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_id'];
+      // error, invalid id
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_id'], $base_url);
       return;
     }
-    if (!$this->isManager && $doc->sentBy != $this->userId) {
-      // user can't delete document
-      $this->Template = new \FrontendTemplate('zaddm_message');
-      $this->Template->active = true;
-  		$this->Template->referer = $base_url;
-  		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-      $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'];
+    // check owner
+    if (!$this->isAdmin && $doc->sentBy != $this->userId) {
+      // error, user can't delete document
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
       return;
     }
-    // info fields
-    $options = array('order' => 'field ASC');
-    $info = \ZadDocmanInfoModel::findByPid($doc->id, $options);
-    if ($info !== null) {
-      while ($info->next()) {
-        if ($fields[$info->field]['type'] == 'choice') {
-          // single choice
-          $list = explode(',', $fields[$info->field]['list']);
-          $value = $list[$info->value];
-        } elseif ($fields[$info->field]['type'] == 'mchoice') {
-          // multi choice
-          $value = array();
-          $list = explode(',', $fields[$info->field]['list']);
-          foreach (deserialize($info->value) as $val) {
-            $value[] = $list[$val];
-          }
-          $value = implode(', ', $value);
-        } elseif ($fields[$info->field]['type'] == 'date') {
-          // date
-          $date = new \Date($info->value);
-          $value = $date->date;
-        } elseif ($fields[$info->field]['type'] == 'auto') {
-          // auto
-          if ($fields[$info->field]['auto_field'] == 'timestamp') {
-            // parse datetime
-            $date = new \Date($info->value);
-            $value = $date->datim;
-          } elseif ($fields[$info->field]['auto_field'] == 'user') {
-            // do nothing
-            $value = $info->value;
-          }
-        } else {
-          // text/number
-          $value = $info->value;
-        }
-        $fields[$info->field]['value'] = $value;
+    // check if published
+    if (!$this->isAdmin) {
+      $waiting_time = intval(substr($this->docman->waitingTime, 3)) * 3600;
+      if ($doc->published && ($doc->publishedTimestamp + $waiting_time) < time()) {
+        // error, user can't change a published document
+        $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
+        return;
+      }
+    }
+    // get document data
+    $data = \ZadDocmanDataModel::findByPid($id);
+    if ($data === null) {
+      // error, invalid id
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_id'], $base_url);
+      return;
+    }
+    // create a data array structure
+    $data_array = array();
+    while ($data->next()) {
+      $data_array[$data->field] = $data->value;
+    }
+    // set data values
+    $values = array();
+    foreach ($fields as $kfld=>$fld) {
+      if ($fld['show']) {
+        $values[] = array(
+          'label' => $fld['label'],
+          'value' => $this->formatFieldText($data_array[$kfld], $fld));
       }
     }
     // set template
     $this->Template = new \FrontendTemplate('zaddm_confirm');
     // set template vars
-    $param['zA'] = 'ddx';
-    $param['zD'] = $id;
+    $param['zdA'] = 'deletex';
+    $param['zdD'] = $id;
     $this->Template->href_action = $this->createUrl($param, $base_url);
     $this->Template->header = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentdelete'];
-    $this->Template->isManager = $this->isManager;
-    $this->Template->fields = $fields;
-    $this->Template->lbl_confirm = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_confirm'];
-    $this->Template->lbl_cancel = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_cancel'];
+    $this->Template->values = $values;
+    $this->Template->but_confirm = $GLOBALS['TL_LANG']['tl_zad_docman']['but_confirm'];
+    $this->Template->but_cancel = $GLOBALS['TL_LANG']['tl_zad_docman']['but_cancel'];
   }
 
   /**
@@ -753,33 +872,35 @@ class ModuleZadDocmanManager extends \Module {
 	protected function documentDeleteExec($id) {
     // set base url
     $base_url = $this->createBaseUrl();
-    // get doc
-    $doc = \ZadDocmanDocModel::findByPk($id);
+    // get document
+    $doc = \ZadDocmanModel::findByPk($id);
     if ($doc === null) {
-      // invalid id
-      $this->Template = new \FrontendTemplate('zaddm_message');
-      $this->Template->active = true;
-  		$this->Template->referer = $base_url;
-  		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-      $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_id'];
+      // error, invalid id
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_id'], $base_url);
       return;
     }
-    if (!$this->isManager && $doc->sentBy != $this->userId) {
-      // user can't delete document
-      $this->Template = new \FrontendTemplate('zaddm_message');
-      $this->Template->active = true;
-  		$this->Template->referer = $base_url;
-  		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-      $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'];
+    // check owner
+    if (!$this->isAdmin && $doc->sentBy != $this->userId) {
+      // error, user can't delete document
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
       return;
+    }
+    // check if published
+    if (!$this->isAdmin) {
+      $waiting_time = intval(substr($this->docman->waitingTime, 3)) * 3600;
+      if ($doc->published && ($doc->publishedTimestamp + $waiting_time) < time()) {
+        // error, user can't change a published document
+        $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
+        return;
+      }
     }
     if (strlen(\Input::post('_confirm')) == 0) {
       // cancel button pressed
       $this->redirect($base_url);
     }
     // delete files
-    $file = \FilesModel::findByUuid($doc->document);
 		$this->import('Files');
+    $file = \FilesModel::findByUuid($doc->document);
 		$this->Files->delete($file->path);
     $file->delete();
     if ($this->docman->enableAttach && !empty($doc->attach)) {
@@ -790,12 +911,12 @@ class ModuleZadDocmanManager extends \Module {
         $file->delete();
       }
     }
-    // delete info
-    $info = \ZadDocmanInfoModel::findByPid($doc->id);
-    if ($info !== null) {
-      while ($info->next()) {
+    // delete data
+    $data = \ZadDocmanDataModel::findByPid($id);
+    if ($data !== null) {
+      while ($data->next()) {
         // delete data
-        $info->delete();
+        $data->delete();
       }
     }
     // delete document
@@ -805,112 +926,398 @@ class ModuleZadDocmanManager extends \Module {
   }
 
   /**
+	 * Publish/Unpublish a document
+	 *
+	 * @param int $id  ID of the document to delete
+	 * @param bool $to_publish  If true publish the document, otherwise unpublish it
+	 */
+	protected function documentPublish($id, $to_publish=true) {
+    // set base url
+    $base_url = $this->createBaseUrl();
+    // get document
+    $doc = \ZadDocmanModel::findByPk($id);
+    if ($doc === null) {
+      // error, invalid id
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_id'], $base_url);
+      return;
+    }
+    // check owner
+    if (!$this->isAdmin && $doc->sentBy != $this->userId) {
+      // error, user can't publish/unpublish document
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
+      return;
+    }
+    if ($to_publish && !$doc->published) {
+      // publish the document
+      if ($this->docman->enablePdf) {
+  		  // convert to PDF
+        $doc->document = $this->convertToPdf($doc->document);
+        if ($doc->document === null) {
+          // error, no file
+          $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_nofile'], $base_url);
+          return;
+        }
+        if ($this->docman->enableAttach) {
+          $files = unserialize($doc->attach);
+          foreach ($files as $kfile=>$file) {
+            $file_pdf = $this->convertToPdf($file);
+            if ($file_pdf === null) {
+              // error, no file
+              $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_nofile'], $base_url);
+              return;
+            }
+            $files[$kfile] = $file_pdf;
+          }
+          $doc->attach = serialize($files);
+        }
+      }
+      // set published fields
+      $doc->published = '1';
+      $doc->publishedTimestamp = time();
+      $doc->save();
+			// add a log entry for published file
+      $this->log('ZAD DocMan - Published document with ID '.$id, __METHOD__, 'ZAD_DOCMAN');
+    } elseif (!$to_publish && $doc->published) {
+      // unpublish the document
+      $waiting_time = intval(substr($this->docman->waitingTime, 3)) * 3600;
+      // check document status
+      if (($doc->publishedTimestamp + $waiting_time) < time() && !$this->isAdmin) {
+        // error, user can't unpublish document
+        $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
+        return;
+      }
+      // set published fields
+      $doc->published = '';
+      $doc->publishedTimestamp = 0;
+      $doc->save();
+			// add a log entry for published file
+      $this->log('ZAD DocMan - Unpublished document with ID '.$id, __METHOD__, 'ZAD_DOCMAN');
+    }
+    // go to document list
+    $this->redirect($base_url);
+  }
+
+	/**
+	 * Show the preview of a document
+	 *
+	 * @param int $id  ID of the document to show
+	 */
+	protected function documentShow($id) {
+    // set base url
+    $base_url = $this->createBaseUrl();
+    // get field data
+    $fields = $this->getFields();
+    if (empty($fields)) {
+      // error, no fields
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_nofields'], $base_url);
+      return;
+    }
+    // get document
+    $doc = \ZadDocmanModel::findByPk($id);
+    if ($doc === null) {
+      // error, invalid id
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_id'], $base_url);
+      return;
+    }
+    // check owner
+    if (!$this->isAdmin && !$this->docman->enableOthers && $doc->sentBy != $this->userId) {
+      // error, user can't show document
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
+      return;
+    }
+    // get document data
+    $data = \ZadDocmanDataModel::findByPid($id);
+    if ($data === null) {
+      // error, invalid id
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_id'], $base_url);
+      return;
+    }
+    // create a data array structure
+    $data_array = array();
+    while ($data->next()) {
+      $data_array[$data->field] = $data->value;
+    }
+    // set data values
+    $values = array();
+    foreach ($fields as $kfld=>$fld) {
+      $values[] = array(
+        'label' => $fld['label'],
+        'value' => $this->formatFieldText($data_array[$kfld], $fld));
+    }
+    // set status
+    $waiting_time = intval(substr($this->docman->waitingTime, 3)) * 3600;
+    if ($doc->published && ($doc->publishedTimestamp + $waiting_time) >= time()) {
+      $date = new \Date($doc->publishedTimestamp);
+      $status = sprintf($GLOBALS['TL_LANG']['tl_zad_docman']['lbl_waitingtm'], $date->datim);
+    } elseif ($doc->published) {
+      // published document
+      $date = new \Date($doc->publishedTimestamp);
+      $status = sprintf($GLOBALS['TL_LANG']['tl_zad_docman']['lbl_publishedtm'], $date->datim);
+    } else {
+      // draft document
+      $date = new \Date($doc->tstamp);
+      $status = sprintf($GLOBALS['TL_LANG']['tl_zad_docman']['lbl_drafttm'], $date->datim);
+    }
+    $values[] = array(
+      'label' => $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_status'],
+      'value' => $status);
+    // download document href
+    $param['zdA'] = 'download';
+    $param['zdF'] = \String::binToUuid($doc->document);
+    $href_document = $this->createUrl($param, $base_url);
+    $attach = array();
+    if ($this->docman->enableAttach) {
+      // attach files
+      $attaches = unserialize($doc->attach);
+      foreach ($attaches as $katt=>$att) {
+        $param['zdA'] = 'download';
+        $param['zdF'] = \String::binToUuid($att);
+        $href = $this->createUrl($param, $base_url);
+        $attach[] = array(
+          'href' => $href,
+          'label' => sprintf($GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloadattach'], $katt+1)
+          );
+      }
+    }
+    // set template
+    $this->Template = new \FrontendTemplate('zaddm_show');
+    // set template vars
+    $this->Template->header = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentshow'];
+    $this->Template->values = $values;
+  	$this->Template->referer = $base_url;
+		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
+		$this->Template->href_document = $href_document;
+  	$this->Template->attach = $attach;
+    $this->Template->lbl_document = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document'];
+    $this->Template->lbl_attach = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach'];
+    $this->Template->lbl_downloaddocument = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloaddocument'];
+  }
+
+  /**
 	 * Download a file
 	 *
-	 * @param int $filename  The file name
+	 * @param string $uuid  The file uuid
 	 */
-	protected function fileDownload($filename) {
-    $dir = \FilesModel::findByUuid($this->docman->dir);
-    if ($dir === null) {
-      // error no folder
-      $this->Template = new \FrontendTemplate('zaddm_message');
-      $this->Template->active = true;
-  		$this->Template->referer = $this->createBaseUrl();
-  		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-      $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_dlfile'];
+	protected function fileDownload($uuid) {
+    // set base url
+    $base_url = $this->createBaseUrl();
+    // get field data
+    $fields = $this->getFields();
+    if (empty($fields)) {
+      // error, no fields
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_nofields'], $base_url);
       return;
     }
-    $file = \FilesModel::findByPath($dir->path.'/'.$filename);
+    // get file
+    $file = \FilesModel::findByUuid($uuid);
     if ($file === null) {
       // error no file
-      $this->Template = new \FrontendTemplate('zaddm_message');
-      $this->Template->active = true;
-  		$this->Template->referer = $this->createBaseUrl();
-  		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-      $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_dlfile'];
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_nofile'], $base_url);
       return;
     }
-    $doc = \ZadDocmanDocModel::findByFile($file->uuid);
+    // get document owner
+    $doc = \ZadDocmanModel::findByFile($uuid);
     if ($doc === null) {
-      // error no document
-      $this->Template = new \FrontendTemplate('zaddm_message');
-      $this->Template->active = true;
-  		$this->Template->referer = $this->createBaseUrl();
-  		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-      $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_dldoc'];
+      // error no file
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_id'], $base_url);
       return;
     }
-    $fileobj = new \File($dir->path.'/'.$filename);
-    if ($fileobj === null) {
-      // error no file object
-      $this->Template = new \FrontendTemplate('zaddm_message');
-      $this->Template->active = true;
-  		$this->Template->referer = $this->createBaseUrl();
-  		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
-      $this->Template->message = $GLOBALS['TL_LANG']['tl_zad_docman']['err_dlfile'];
+    // check owner
+    if (!$this->isAdmin && !$this->docman->enableOthers && $doc->sentBy != $this->userId) {
+      // error, user can't show document
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
       return;
     }
-    // create name of the file
-    $name = $this->docman->filename;
-    $fields = deserialize($this->docman->infoFields);
-    $options = array('order' => 'field ASC');
-    $info = \ZadDocmanInfoModel::findByPid($doc->id, $options);
-    if ($info !== null) {
-      while ($info->next()) {
-        if (strpos($name, '{{'.($info->field+1).'}}') !== false) {
-          if ($fields[$info->field]['type'] == 'choice') {
-            // single choice
-            $list = explode(',', $fields[$info->field]['list']);
-            $value = str_replace(array(' '), '-', trim($list[$info->value]));
-          } elseif ($fields[$info->field]['type'] == 'mchoice') {
-            // multi choice
-            $value = array();
-            $list = explode(',', $fields[$info->field]['list']);
-            foreach (deserialize($info->value) as $val) {
-              $value[] = str_replace(array(' '), '-', trim($list[$val]));
-            }
-            $value = implode('-', $value);
-          } elseif ($fields[$info->field]['type'] == 'date') {
-            // date
-            $date = new \Date($info->value);
-            $value = str_replace(array('/','_','.',':',' '), '-', $date->date);
-          } elseif ($fields[$info->field]['type'] == 'auto' && $fields[$info->field]['auto_field'] == 'timestamp') {
-            // auto:timestamp
-            $date = new \Date($info->value);
-            $value = str_replace(array('/','_','.',':',' '), '-', $date->datim);
-          } else {
-            // text/number/auto:user
-            $value = str_replace(array(' '), '-', trim($info->value));
-          }
-          $name = str_replace('{{'.($info->field+1).'}}', $value, $name);
+    // get name
+    $filename = null;
+    if ($doc->document == \String::uuidToBin($uuid)) {
+      // get document file name
+      $filename = $this->zad_docman_docname;
+    } elseif ($this->docman->enableAttach) {
+      // get attachment file name
+      $attaches = unserialize($doc->attach);
+      foreach ($attaches as $katt=>$att) {
+        if ($att == \String::uuidToBin($uuid)) {
+          // attach found
+          $filename = str_replace('{{attachnum}}', $katt+1, $this->zad_docman_attachname);
         }
       }
     }
-    // add attachment label
-    if ($doc->document != $file->uuid) {
-      foreach (deserialize($doc->attach) as $key=>$item) {
-        if ($item == $file->uuid) {
-          // add label
-          $name .= '_' . $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_fname_attach'.($key+1)];
-        }
+    if ($filename === null) {
+      // error, document not found
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_nofile'], $base_url);
+      return;
+    }
+    // get document data
+    $data = \ZadDocmanDataModel::findByPid($doc->id);
+    if ($data === null) {
+      // error, invalid id
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_id'], $base_url);
+      return;
+    }
+    while ($data->next()) {
+      if (strpos($filename, '{{field:'.$data->field.'}}') !== false) {
+        // replace placeholder
+        $value = $this->formatFieldText($data->value, $fields[$data->field]);
+        $filename = str_replace('{{field:'.$data->field.'}}', $value, $filename);
       }
     }
 		// normalize the file name
-		$name = utf8_romanize($name);
-		$name = preg_replace('/[^A-Za-z0-9_-]/', '', $name);
+		$filename = utf8_romanize($filename);
+		$filename = preg_replace('/[^A-Za-z0-9_-]/', '-', $filename);
+    $filename .= '.' . $file->extension;
     // send file end exit
-    $fileobj->sendToBrowser($name.'.'.$file->extension);
+    $fileobj = new \File($file->path, true);
+    $fileobj->sendToBrowser($filename);
+  }
+
+	/**
+	 * Show document list
+	 *
+	 * @param int $page  Page number
+	 */
+	protected function documentList($page=0) {
+    // set template
+    $this->Template = new \FrontendTemplate('zaddm_list');
+    // set base url
+    $base_url = $this->createBaseUrl();
+    // get field data
+    $fields = $this->getFields();
+    if (empty($fields)) {
+      // error, no fields
+      $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_nofields'], $base_url);
+      return;
+    }
+    // pagination
+    $limit = null;
+    $offset = null;
+    $show_others = ($this->isAdmin || $this->docman->enableOthers) ? null : $this->userId;
+    $total = \ZadDocmanModel::countDocuments($this->docman->id, $show_others);
+		if ($this->perPage > 0 && $total > $this->perPage) {
+      // adjust page number
+      if ($page < 1) {
+        // first page
+        $page = 1;
+      } elseif ($page > ceil($total / $this->perPage)) {
+        // last page
+        $page = ceil($total / $this->perPage);
+      }
+			// set limit and offset
+			$limit = $this->perPage;
+			$offset = ($page - 1) * $this->perPage;
+			if ($offset + $limit > $total) {
+				$limit = $total - $offset;
+			}
+			// add the pagination menu
+			$pagination = new \Pagination($total, $this->perPage, $GLOBALS['TL_CONFIG']['maxPaginationLinks'], 'zdP');
+			$this->Template->pagination = $pagination->generate("\n  ");
+    }
+    // get docs
+    $data = array();
+    $docs = \ZadDocmanModel::findDocuments($this->docman->id, $show_others, $fields, $offset, $limit);
+    if ($docs !== null) {
+      $index = 0;
+      $waiting_time = intval(substr($this->docman->waitingTime, 3)) * 3600;
+      while ($docs->next()) {
+        $param = array();
+        $data[$index]['id'] = $docs->id;
+        // set status
+        if ($docs->published && ($docs->publishedTimestamp + $waiting_time) >= time()) {
+          $data[$index]['status'] = 'st_waiting';
+        } elseif ($docs->published) {
+          // published document
+          $data[$index]['status'] = 'st_published';
+        } else {
+          // draft document
+          $data[$index]['status'] = 'st_draft';
+        }
+        // field values
+        $values = array();
+        foreach ($fields as $kfld=>$fld) {
+          if ($fld['show']) {
+            $fname = 'field_'.$kfld;
+            $values[$kfld] = $this->formatFieldText($docs->$fname, $fld);
+          }
+        }
+        $data[$index]['values'] = $values;
+        // buttons
+        $data[$index]['href_edit'] = null;
+        $data[$index]['href_delete'] = null;
+        $data[$index]['href_publish'] = null;
+        $data[$index]['href_unpublish'] = null;
+        if ($this->isAdmin || ($docs->sentBy == $this->userId && $data[$index]['status'] != 'st_published')) {
+          // user can edit/delete document
+          $param = array();
+          $param['zdD'] = $docs->id;
+          $param['zdA'] = 'edit';
+          $data[$index]['href_edit'] = $this->createUrl($param, $base_url);
+          $param['zdA'] = 'delete';
+          $data[$index]['href_delete'] = $this->createUrl($param, $base_url);
+        }
+        if ($data[$index]['status'] == 'st_draft' && ($this->isAdmin || $docs->sentBy == $this->userId)) {
+          // user can publish document
+          $param['zdA'] = 'publish';
+          $data[$index]['href_publish'] = $this->createUrl($param, $base_url);
+        } elseif ($data[$index]['status'] == 'st_waiting' && ($this->isAdmin || $docs->sentBy == $this->userId)) {
+          $param['zdA'] = 'unpublish';
+          $data[$index]['href_unpublish'] = $this->createUrl($param, $base_url);
+        } elseif ($data[$index]['status'] == 'st_published' && $this->isAdmin) {
+          $param['zdA'] = 'unpublish';
+          $data[$index]['href_unpublish'] = $this->createUrl($param, $base_url);
+        }
+        // preview
+        $param = array();
+        $param['zdD'] = $docs->id;
+        $param['zdA'] = 'show';
+        $data[$index]['href_show'] = $this->createUrl($param, $base_url);
+        $index++;
+      }
+    }
+    // set add url
+    $param = array();
+    $param['zdA'] = 'add';
+    $this->Template->href_add = $this->createUrl($param, $base_url);
+    // set other template vars
+    $this->Template->fields = $fields;
+    $this->Template->docs = $data;
+    $this->Template->isAdmin = $this->isAdmin;
+    $this->Template->wrn_nodata = $GLOBALS['TL_LANG']['tl_zad_docman']['wrn_nodata'];
+    $this->Template->lbl_documentlist = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentlist'];
+    $this->Template->lbl_status = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_status'];
+    $this->Template->st_published = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_published'];
+    $this->Template->st_draft = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_draft'];
+    $this->Template->st_waiting = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_waiting'];
+    $this->Template->but_add = $GLOBALS['TL_LANG']['tl_zad_docman']['but_add'];
+    $this->Template->but_show = $GLOBALS['TL_LANG']['tl_zad_docman']['but_show'];
+    $this->Template->but_publish = $GLOBALS['TL_LANG']['tl_zad_docman']['but_publish'];
+    $this->Template->but_unpublish = $GLOBALS['TL_LANG']['tl_zad_docman']['but_unpublish'];
+    $this->Template->but_edit = $GLOBALS['TL_LANG']['tl_zad_docman']['but_edit'];
+    $this->Template->but_delete = $GLOBALS['TL_LANG']['tl_zad_docman']['but_delete'];
+	}
+
+	/**
+	 * Show an error message and terminate module
+	 *
+	 * @param string $message  Message to show
+	 * @param string $url  URL to go back
+	 */
+	private function errorMessage($message, $url) {
+    $this->Template = new \FrontendTemplate('zaddm_message');
+    $this->Template->active = true;
+  	$this->Template->referer = $url;
+		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
+    $this->Template->message = $message;
   }
 
   /**
 	 * Create a base URL without some parameters
 	 *
-	 * @param array $params List of parameters to be deleted
+	 * @param bool $encode  True to $encode "&" in URL, False otherwise
 	 *
 	 * @return string  The new URL
 	 */
-	protected function createBaseUrl() {
-    $params=array('zA', 'zD', 'zP', 'zF');
+	private function createBaseUrl($encode=true) {
+    $params = array('zdA', 'zdP', 'zdD', 'zdF');
     $base = explode('?', \Environment::get('request'));
     $q = '';
     if (isset($base[1])) {
@@ -923,7 +1330,7 @@ class ModuleZadDocmanManager extends \Module {
   			}
   		}
       if (!empty($queries)) {
-  			$q = '?' . implode('&amp;', $queries);
+  			$q = '?' . implode($encode ? '&amp;' : '&', $queries);
   		}
     }
     return $base[0] . $q;
@@ -932,12 +1339,13 @@ class ModuleZadDocmanManager extends \Module {
   /**
 	 * Create a new URL with some parameters
 	 *
-	 * @param array $params List of couples key=>value to be added
-	 * @param string $base The base url
+	 * @param array $params  List of couples key=>value to be added
+	 * @param string $base  The base url
+	 * @param bool $encode  True to $encode "&" in URL, False otherwise
 	 *
 	 * @return string  The new URL
 	 */
-	protected function createUrl($params, $base='') {
+	private function createUrl($params, $base='', $encode=true) {
     if ($base == '') {
       $base = $this->createBaseUrl();
     }
@@ -946,151 +1354,415 @@ class ModuleZadDocmanManager extends \Module {
 		foreach ($params as $k=>$v) {
       $queries[] = "$k=$v";
     }
-    $q = implode('&amp;', $queries);
-    return $base . ((strpos($base, '?') === false) ? '?' : '&amp;') . $q;
+    $q = implode($encode ? '&amp;' : '&', $queries);
+    return $base . ((strpos($base, '?') === false) ? '?' : ($encode ? '&amp;' : '&')) . $q;
+  }
+
+  /**
+	 * Create an array with all field data
+	 *
+	 * @return array  The a rray with field data
+	 */
+	private function getFields() {
+    $values = array();
+    // read data
+    $sortable = unserialize($this->zad_docman_list);
+    $fields = \ZadDocmanFieldsModel::findByPid($this->docman->id);
+    if ($fields !== null) {
+      // put data in an array indexed by field name
+      foreach ($sortable as $fldsort) {
+        // search field
+        $fld_data = null;
+        foreach ($fields as $fld) {
+          if ($fld->name == $fldsort['name']) {
+            $fld_data = $fld;
+            break;
+          }
+        }
+        if (!$fld_data) {
+          // error, jump to next field
+          continue;
+        }
+        $values[$fld_data->name] = array(
+          'label'=>$fld_data->label,
+          'type'=>$fld_data->type,
+          'mandatory'=>$fld_data->mandatory,
+          'defaultNow'=>$fld_data->defaultNow,
+          'defaultValue'=>$fld_data->defaultValue,
+          'list'=>$fld_data->list,
+          'listOther'=>$fld_data->listOther,
+          'autofield'=>$fld_data->autofield,
+          'sort'=>$fldsort['sort'],
+          'show'=>(isset($fldsort['show']) && $fldsort['show']) ? '1' : '');
+      }
+    }
+    // return fields
+    return $values;
   }
 
 	/**
-	 * Save file attachment
+	 * Show an error message and send an HTTP error code to signal an aborted upload
 	 *
-	 * @param string $name  Parameter name in "$_FILE" array
-	 * @param string $filename  File name for the uploaded file, without extension
-	 *
-	 * @return string  An error messages or null
+	 * @param string $message  Message to show
 	 */
-	protected function saveFileAttachment($name, $filename='') {
-    // init
-    $this->deleteFileAttachment($name);
-    $error = null;
-		$file = $_FILES[$name];
-    $filename = ($filename == '') ? pathinfo($file['name'], PATHINFO_FILENAME) : $filename;
-		$filename = utf8_romanize($filename);
-    $fileext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    $allowed_types = explode(',', strtolower($this->docman->fileTypes));
-    $allowed_types = array_intersect($allowed_types, explode(',', strtolower($GLOBALS['TL_CONFIG']['uploadTypes'])));
-    $folder = \FilesModel::findByUuid($this->docman->dir);
-    // check
-    if (!is_uploaded_file($file['tmp_name'])) {
-		  // file was not uploaded
-			if ($file['error'] == 1 || $file['error'] == 2) {
-        // file size error
-        $error = $GLOBALS['TL_LANG']['tl_zad_docman']['err_filesize'];
-			} else {
-        // upload error
-        $error = $GLOBALS['TL_LANG']['tl_zad_docman']['err_file'];
-			}
-	  } elseif ($file['size'] > $GLOBALS['TL_CONFIG']['maxFileSize']) {
-  		// file is too big
-      $error = $GLOBALS['TL_LANG']['tl_zad_docman']['err_filesize'];
-	  } elseif (!in_array($fileext, $allowed_types)) {
-		  // file type is not allowed
-      $error = $GLOBALS['TL_LANG']['tl_zad_docman']['err_filetype'];
-	  } elseif ($folder === null || $folder->path == '' || !is_dir(TL_ROOT . '/' . $folder->path)) {
-      // no folder
-      $error = $GLOBALS['TL_LANG']['tl_zad_docman']['err_folder'];
-	  } else {
-  		$this->import('Files');
-      $path = 'system/tmp/'.pathinfo($file['tmp_name'], PATHINFO_BASENAME);
-      $this->Files->move_uploaded_file($file['tmp_name'], $path);
-	    $this->Files->chmod($path, $GLOBALS['TL_CONFIG']['defaultFileChmod']);
-      $_SESSION['zad_docman'][$name]['tmp_name'] = $path;
-      $_SESSION['zad_docman'][$name]['folder'] = $folder->path;
-      $_SESSION['zad_docman'][$name]['name'] = $filename;
-      $_SESSION['zad_docman'][$name]['ext'] = $fileext;
-    }
-    // return error message
-    return $error;
+	private function errorUpload($message) {
+    header("HTTP/1.1 500 Internal Server Error");
+    header('Content-type: text/plain');
+    echo $message;
+    die();
   }
 
 	/**
-	 * Delete file previuosly saved in SESSION
+	 * Save uploaded files to temp folder and send back file info
 	 *
-	 * @param string $name  Parameter name in "$_SESSION" array
+	 * @param int $id  ID of the document owner (0=a new one)
+	 * @param string $pname  Parameter name used in $_FILES array
+	 * @param array $files  $_FILES array for this upload
 	 */
-	protected function deleteFileAttachment($name) {
-    // get data from session
-    $file = $_SESSION['zad_docman'][$name];
-    if (isset($file['uuid'])) {
-      // save file to be removed
-      $_SESSION['zad_docman']['__TO_REMOVE__'][] = $file['uuid'];
+	private function saveUploadedFiles($id, $pname, $files) {
+    // init return value
+    $result = array();
+    // allowed file types
+    $allowed_types = array_intersect(
+      trimsplit(',', strtolower($this->docman->fileTypes)),
+      trimsplit(',', strtolower(\Config::get('uploadTypes'))));
+    // save files
+    for ($i = 0; $i < count($files['name']); $i++) {
+      $ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
+      // check
+      if (!is_uploaded_file($files['tmp_name'][$i])) {
+		    // file was not uploaded
+        if ($files['error'][$i] == 1 || $files['error'][$i] == 2) {
+          // fatal: file size error
+          $this->errorUpload($GLOBALS['TL_LANG']['tl_zad_docman']['err_filesize']);
+        } else {
+          // fatal: generic upload error
+          $this->errorUpload($GLOBALS['TL_LANG']['tl_zad_docman']['err_file']);
+        }
+      } elseif ($files['size'][$i] > \Config::get('maxFileSize')) {
+        // fatal: file size error
+        $this->errorUpload($GLOBALS['TL_LANG']['tl_zad_docman']['err_filesize']);
+	    } elseif (!in_array($ext, $allowed_types)) {
+        // fatal: file type error
+        $this->errorUpload($GLOBALS['TL_LANG']['tl_zad_docman']['err_filetype']);
+	    } else {
+        // ok, file uploaded
+        $this->import('Files');
+        $name = 'zad_docman-'.$id.'-'.uniqid(rand());
+        $path = 'system/tmp/'.$name;
+        $this->Files->move_uploaded_file($files['tmp_name'][$i], $path);
+	      $this->Files->chmod($path, \Config::get('defaultFileChmod'));
+        $obj = array(
+          'type' => 'uploaded',
+          'uuid' => $name,
+          'name' => $files['name'][$i],
+          'ext' => $ext,
+          'size' => $files['size'][$i]);
+        $result[] = $obj;
+        // store info in session
+        $_SESSION['zad_docman'][$pname][] = $obj;
+      }
     }
-    if (isset($file['tmp_name'])) {
-      // delete temp file
-  		$this->import('Files');
-	    $this->Files->delete($file['tmp_name']);
-    }
-    // delete session data
-    unset($_SESSION['zad_docman'][$name]);
+    // send back file info and exit
+    header('Content-type: application/json');
+    echo(json_encode($result));
+    die();
   }
 
 	/**
-	 * Store file previously saved in SESSION
+	 * Store files previously saved in SESSION
 	 *
-	 * @param string $name  Parameter name in "$_SESSION" array
+	 * @param array $files  List of uploaded file
+	 * @param array $doc_id  The document owner ID
 	 *
-	 * @return string  The file UUID stored in the database
+	 * @return array|NULL  The UUID list of files stored in the database, or NULL on error
 	 */
-	protected function storeFile($name) {
-    // get data from session
-    $file = $_SESSION['zad_docman'][$name];
-    if (isset($file['uuid'])) {
-      // file already exists
-      return $file['uuid'];
-    }
-    // unique name
-    $filename = $this->userId.'-'.str_replace('.', '-', microtime(true)).'-'.rand(0,999);
-    // store file
-    $path = $file['folder'].'/'.$filename.'.';
-    $file['ext'] = strtolower($file['ext']);
-    $filename_doc = $path.$file['ext'];
+	private function storeFiles($files, $doc_id) {
 		$this->import('Files');
-    $this->Files->rename($file['tmp_name'], $filename_doc);
-	  // convert to PDF
-	  if ($this->docman->enablePdf && $file['ext'] != 'pdf') {
-	    $filename_pdf = $path.'pdf';
-      $cmd = 'python ' . TL_ROOT . '/system/modules/zad_docman/vendor/pyodconverter/DocumentConverter.py "' .
-        $filename_doc . '" "' . $filename_pdf . '"';
-      $res = exec($cmd);
-      if (strlen($res) == 0 && file_exists($filename_pdf)) {
-        // PDF file created, remove original one
-        unlink($filename_doc);
-        $filename_doc = $filename_pdf;
+    $uuid_list = array();
+    foreach ($files as $file) {
+      if ($file['type'] == 'uploaded') {
+        // add a new uploaded file
+				$folder = \FilesModel::findByUuid($this->docman->dir);
+				if ($folder === NULL) {
+				  // error, upload folder not found
+          return NULL;
+				}
+        $pathname = $folder->path . '/zad_docman-' . $doc_id . '-' . uniqid(rand()) . '.' . strtolower($file['ext']);
+				$this->Files->rename('system/tmp/' . $file['uuid'], $pathname);
+        $this->Files->chmod($pathname, \Config::get('defaultFileChmod'));
+				// generate the DB entries
+				$fileobj = \FilesModel::findByPath($pathname);
+    		// existing file is being replaced
+    	  if ($fileobj !== null) {
+          // update file info
+    			$fileobj->tstamp = time();
+    			$fileobj->path = $pathname;
+    			$fileobj->hash = md5_file(TL_ROOT.'/'.$pathname);
+    			$fileobj->save();
+      		// update the hash of the target folder
+      		\Dbafs::updateFolderHashes($folder->path);
+    		} else {
+          // new file info
+    		  $fileobj = \Dbafs::addResource($pathname);
+    		}
+        // save UUID
+        $uuid_list[] = $fileobj->uuid;
+  			// add a log entry for new file
+  			$this->log('ZAD DocMan - File "'.$file['uuid'].'" has been moved to "'.$folder->path.'"', __METHOD__, TL_FILES);
+      } elseif ($file['type'] == 'removed') {
+        // remove an existent file
+				$fileobj = \FilesModel::findByUuid(\String::uuidToBin($file['uuid']));
+				if ($fileobj === NULL) {
+				  // error, file to be removed not found
+          return NULL;
+				}
+        // remove file
+        $this->Files->delete($fileobj->path);
+        \Dbafs::deleteResource($fileobj->path);
+  			// add a log entry for removed file
+  			$this->log('ZAD DocMan - File "'.$fileobj->path.'" has been removed', __METHOD__, TL_FILES);
+      } else {
+        // existent file
+				$fileobj = \FilesModel::findByUuid(\String::uuidToBin($file['uuid']));
+				if ($fileobj === NULL) {
+				  // error, existent file not found
+          return NULL;
+				}
+        // save UUID
+        $uuid_list[] = $fileobj->uuid;
       }
     }
-		// generate the DB entries
-	  $fileobj = \FilesModel::findByPath($filename_doc);
-		// existing file is being replaced
-	  if ($fileobj !== null) {
-      // update file info
-			$fileobj->tstamp = time();
-			$fileobj->path = $filename_doc;
-			$fileobj->hash = md5_file(TL_ROOT.'/'.$filename_doc);
-			$fileobj->save();
-		} else {
-      // new file info
-		  $fileobj = \Dbafs::addResource($filename_doc);
-		}
-		// update the hash of the target folder
-		\Dbafs::updateFolderHashes($file['folder']);
-    // delete session data
-    unset($_SESSION['zad_docman'][$name]);
-    // return UUID
-    return $fileobj->uuid;
+    // return UUID list of stored files
+    return $uuid_list;
   }
 
 	/**
-	 * Remove existent files marked in SESSION
+	 * Format field value for html form
+	 *
+	 * @param string $name  The field name
+	 * @param string $value  The field value
+	 * @param array $field  The field structure
+	 *
+	 * @return string  The formatted field
 	 */
-	protected function removeFiles() {
-    if (isset($_SESSION['zad_docman']['__TO_REMOVE__'])) {
-		  $this->import('Files');
-      foreach ($_SESSION['zad_docman']['__TO_REMOVE__'] as $id) {
-        // delete file
-        $file = \FilesModel::findByUuid($id);
-		    $this->Files->delete($file->path);
+	private function formatFieldForm($name, $value, $field) {
+    $data = $value;
+    switch ($field['type']) {
+      case 't_text':
+        if ($value === null) {
+          // default: text
+          $data = $field['defaultValue'];
+        }
+        break;
+      case 't_number':
+        if ($value === null) {
+          // default: number
+          $data = $field['defaultValue'];
+        }
+        break;
+      case 't_sequence':
+        if ($value === null) {
+          // default: next value in sequence
+          $data = \ZadDocmanDataModel::nextSequence($this->docman->id, $name);
+        }
+        break;
+      case 't_date':
+        if ($value === null && $field['defaultNow']) {
+          // default: date of timestamp
+          $date = new \Date();
+          $data = $date->date;
+        } elseif ($value !== null) {
+          // format value
+          $date = new \Date($value);
+          $data = $date->date;
+        }
+        break;
+      case 't_time':
+        if ($value === null && $field['defaultNow']) {
+          // default: time of timestamp
+          $date = new \Date();
+          $data = $date->time;
+        } elseif ($value !== null) {
+          // format value
+          $date = new \Date($value);
+          $data = $date->time;
+        }
+        break;
+      case 't_datetime':
+        if ($value === null && $field['defaultNow']) {
+          // default: date/time of timestamp
+          $date = new \Date();
+          $data = $date->datim;
+        } elseif ($value !== null) {
+          // format value
+          $date = new \Date($value);
+          $data = $date->datim;
+        }
+        break;
+      case 't_choice':
+        if ($value === null) {
+          // default: choice
+          $list = unserialize($field['list']);
+          foreach ($list as $l) {
+            if (isset($l['default']) && $l['default']) {
+              $data = $l['value'];
+              break;
+            }
+          }
+        }
+        break;
+      case 't_mchoice':
+        if ($value === null) {
+          // default: multi choice
+          $data_list = array();
+          $list = unserialize($field['list']);
+          foreach ($list as $l) {
+            if (isset($l['default']) && $l['default']) {
+              $data_list[] = $l['value'];
+            }
+          }
+          $data = $data_list;
+        } else {
+          // data list
+          $data = unserialize($value);
+        }
+        break;
+      case 't_auto':
+        if ($value === null) {
+          // default: automatic field
+          if ($field['autofield'] == 'af_timestamp') {
+            $date = new \Date();
+            $data = $date->datim;
+          } elseif ($field['autofield'] == 'af_user') {
+            $data = $this->User->lastname.' '.$this->User->firstname;
+          }
+        } else {
+          // format value
+          if ($this->isAdmin && $field['autofield'] == 'af_timestamp') {
+            $date = new \Date($value);
+            $data = $date->datim;
+          } elseif ($this->isAdmin && $field['autofield'] == 'af_user') {
+            $user = \MemberModel::findByPk($value);
+            $data = $user->lastname.' '.$user->firstname;
+          }
+        }
+        break;
+    }
+    // return formatted value
+    return $data;
+  }
+
+	/**
+	 * Format field value for text output
+	 *
+	 * @param string $value  The field value
+	 * @param array $field  The field structure
+	 *
+	 * @return string  The formatted field
+	 */
+	private function formatFieldText($value, $field) {
+    $data = '';
+    switch ($field['type']) {
+      case 't_text':
+      case 't_number':
+      case 't_sequence':
+        $data = $value;
+        break;
+      case 't_date':
+        $date = new \Date($value);
+        $data = $date->date;
+        break;
+      case 't_time':
+        $date = new \Date($value);
+        $data = $date->time;
+        break;
+      case 't_datetime':
+        $date = new \Date($value);
+        $data = $date->datim;
+        break;
+      case 't_choice':
+        if ($field['listOther'] && substr($value,0,10) == '__OTHER__:') {
+          // other option
+          $data = substr($value, 10);
+        } else {
+          // listed option
+          $list = unserialize($field['list']);
+          foreach ($list as $l) {
+            if ($l['value'] == $value) {
+              $data = $l['label'];
+              break;
+            }
+          }
+        }
+        break;
+      case 't_mchoice':
+        $list = unserialize($field['list']);
+        $vlist = unserialize($value);
+        foreach ($vlist as $vl) {
+          foreach ($list as $l) {
+            if ($l['value'] == $vl) {
+              $data .= (($data == '') ? '' : ', ') . $l['label'];
+              break;
+            }
+          }
+        }
+        if ($field['listOther'] && in_array('__OTHER__', $vlist)) {
+          // other option
+          $data .= (($data == '') ? '' : ', ') . substr(end($vlist), 10);
+        }
+        break;
+      case 't_auto':
+        if ($field['autofield'] == 'af_timestamp') {
+          $date = new \Date($value);
+          $data = $date->datim;
+        } elseif ($field['autofield'] == 'af_user') {
+          $user = \MemberModel::findByPk($value);
+          if ($user !== null) {
+            $data = $user->lastname.' '.$user->firstname;
+          }
+        }
+        break;
+    }
+    // return formatted value
+    return $data;
+  }
+
+	/**
+	 * Convert document to PDF format
+	 *
+	 * @param string $uuid  The UUID of the file
+	 *
+	 * @return string  The UUID of the converted file
+	 */
+	private function convertToPdf($uuid) {
+	  // get file
+    $file = \FilesModel::findByUuid($uuid);
+    if ($file === null) {
+      // error, no file
+      return null;
+    }
+    if (strtolower($file->extension) != 'pdf') {
+      // convert
+      $filename = $file->path;
+      $filename_pdf = substr($filename, 0, - strlen($file->extension)) . 'pdf';
+      $cmd = 'python "' . TL_ROOT . '/system/modules/zad_docman/vendor/pyodconverter-1.9/main.py" ' .
+             '"' . TL_ROOT . '/' . $filename . '" "' . TL_ROOT . '/' . $filename_pdf . '"';
+      $res = exec($cmd);
+      if (strlen($res) == 0 && file_exists(TL_ROOT . '/' . $filename_pdf)) {
+        // PDF file created, remove original file
+        unlink(TL_ROOT . '/' . $filename);
         $file->delete();
+        // add to database the new file
+  	    $fileobj = \Dbafs::addResource($filename_pdf);
+        $uuid = $fileobj->uuid;
+        $this->log('ZAD DocMan - File "'.$filename.'" converted to PDF', __METHOD__, 'ZAD_DOCMAN');
+      } else {
+        // error: no PDF conversion
+        $this->log('ZAD DocMan - Can\'t convert to PDF the file "'.$filename.'"', __METHOD__, TL_ERROR);
       }
     }
+    return $uuid;
   }
 
 }

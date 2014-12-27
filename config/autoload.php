@@ -17,6 +17,7 @@
 ClassLoader::addNamespaces(array
 (
 	'zad_docman',
+	'contao',
 ));
 
 
@@ -26,16 +27,16 @@ ClassLoader::addNamespaces(array
 ClassLoader::addClasses(array
 (
 	// Models
-	'zad_docman\ZadDocmanDocModel'      => 'system/modules/zad_docman/models/ZadDocmanDocModel.php',
-	'zad_docman\ZadDocmanInfoModel'     => 'system/modules/zad_docman/models/ZadDocmanInfoModel.php',
+	'zad_docman\ZadDocmanArchiveModel'  => 'system/modules/zad_docman/models/ZadDocmanArchiveModel.php',
+	'zad_docman\ZadDocmanDataModel'     => 'system/modules/zad_docman/models/ZadDocmanDataModel.php',
+	'zad_docman\ZadDocmanFieldsModel'   => 'system/modules/zad_docman/models/ZadDocmanFieldsModel.php',
 	'zad_docman\ZadDocmanModel'         => 'system/modules/zad_docman/models/ZadDocmanModel.php',
 
 	// Modules
 	'zad_docman\ModuleZadDocmanManager' => 'system/modules/zad_docman/modules/ModuleZadDocmanManager.php',
-	'zad_docman\ModuleZadDocmanReader'  => 'system/modules/zad_docman/modules/ModuleZadDocmanReader.php',
 
 	// Widgets
-	'Contao\InfofieldsWizard'           => 'system/modules/zad_docman/widgets/InfofieldsWizard.php',
+	'contao\SortableWizard'             => 'system/modules/zad_docman/widgets/SortableWizard.php',
 ));
 
 
@@ -48,5 +49,6 @@ TemplateLoader::addFiles(array
 	'zaddm_edit'    => 'system/modules/zad_docman/templates',
 	'zaddm_list'    => 'system/modules/zad_docman/templates',
 	'zaddm_message' => 'system/modules/zad_docman/templates',
-	'zaddm_reader'  => 'system/modules/zad_docman/templates',
+	'zaddm_show'    => 'system/modules/zad_docman/templates',
+	'_zaddm_reader' => 'system/modules/zad_docman/templates',
 ));

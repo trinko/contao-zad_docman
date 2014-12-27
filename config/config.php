@@ -16,22 +16,20 @@
  * BACK END MODULES
  */
 $GLOBALS['BE_MOD']['content']['zad_docman'] = array(
-	'tables'		   =>	array('tl_zad_docman'),
-  'icon'			   =>	'system/modules/zad_docman/assets/icon.png',
-	'stylesheet'   => 'system/modules/zad_docman/assets/be_styles.css',
-  'javascript'   => 'system/modules/zad_docman/assets/be_scripts.js'
+	'tables'		   =>	array('tl_zad_docman_archive','tl_zad_docman_templates','tl_zad_docman_fields'),
+  'icon'			   =>	'system/modules/zad_docman/assets/icon.gif'
 );
 
 
 /**
  * BACK END FORM FIELDS
  */
-$GLOBALS['BE_FFL']['infofieldsWizard'] = 'InfofieldsWizard';
+$GLOBALS['BE_FFL']['sortableWizard'] = 'SortableWizard';
 
 
 /**
  * FRONT END MODULES
  */
 $GLOBALS['FE_MOD']['zad_docman']['zad_docman_manager'] = 'ModuleZadDocmanManager';
-$GLOBALS['FE_MOD']['zad_docman']['zad_docman_reader'] = 'ModuleZadDocmanReader';
+// $GLOBALS['FE_MOD']['zad_docman']['zad_docman_reader'] = 'ModuleZadDocmanReader';
 

@@ -19,19 +19,20 @@ namespace zad_docman;
 
 
 /**
- * Class ZadDocmanDocModel
+ * Class ZadDocmanArchiveModel
  *
  * @copyright  Antonello Dessì 2014
  * @author     Antonello Dessì
  * @package    zad_docman
  */
-class ZadDocmanInfoModel extends \Model {
+class ZadDocmanArchiveModel extends \Model {
 
 	/**
 	 * Name of the table
+	 *
 	 * @var string
 	 */
-	protected static $strTable = 'tl_zad_docman_info';
+	protected static $strTable = 'tl_zad_docman_archive';
 
 }
 

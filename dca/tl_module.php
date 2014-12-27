@@ -16,18 +16,114 @@
  * Table tl_module
  */
 
+// Configuration
+$GLOBALS['TL_DCA']['tl_module']['config']['onload_callback'][] =
+  array('tl_module_zad_docman', 'config');
+
 // Palettes
-$GLOBALS['TL_DCA']['tl_module']['palettes']['zad_docman_manager'] = '{title_legend},name,headline,type;{config_legend},zad_docman;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID,space';
-$GLOBALS['TL_DCA']['tl_module']['palettes']['zad_docman_reader'] = '{title_legend},name,headline,type;{config_legend},zad_docman;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['zad_docman_manager'] = '{title_legend},name,headline,type;{config_legend},zad_docman_archive,zad_docman_list,zad_docman_docname,zad_docman_attachname,perPage;{expert_legend:hide},cssID,space';
 
 // Fields
-$GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman'] = array(
-  'label'                        => &$GLOBALS['TL_LANG']['tl_module']['zad_docman'],
-  'exclude'                      => true,
-  'inputType'                    => 'select',
-  'foreignKey'                   => 'tl_zad_docman.name',
-  'eval'                         => array('mandatory'=>true, 'tl_class'=>'clr'),
-	'sql'                          => "int(10) unsigned NOT NULL default '0'",
-	'relation'                     => array('type'=>'hasOne', 'load'=>'lazy')
+$GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_archive'] = array(
+  'label'                       => &$GLOBALS['TL_LANG']['tl_module']['zad_docman_archive'],
+  'exclude'                     => true,
+  'inputType'                   => 'select',
+	'options_callback'            => array('tl_module_zad_docman', 'getArchives'),
+  'eval'                        => array('mandatory'=>true, 'submitOnChange'=>true, 'tl_class'=>'clr'),
+	'sql'                         => "int(10) unsigned NOT NULL default '0'"
 );
+$GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_list'] = array(
+  'label'                       => &$GLOBALS['TL_LANG']['tl_module']['zad_docman_list'],
+  'exclude'                     => true,
+	'inputType'                   => 'sortableWizard',
+	'options_callback'            => array('tl_module_zad_docman', 'getFields'),
+	'eval'                        => array('mandatory'=>true, 'multiple'=>true, 'tl_class'=>'clr'),
+	'sql'                         => "blob NULL"
+);
+$GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_docname'] = array(
+  'label'                       => &$GLOBALS['TL_LANG']['tl_module']['zad_docman_docname'],
+  'exclude'                     => true,
+	'inputType'                   => 'text',
+	'explanation'                 => 'zad_docman_tags',
+	'eval'                        => array('mandatory'=>true, 'maxlength'=>255, 'helpwizard'=>true, 'tl_class'=>'w50'),
+	'sql'                         => "varchar(255) NOT NULL default ''"
+);
+$GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_attachname'] = array(
+  'label'                       => &$GLOBALS['TL_LANG']['tl_module']['zad_docman_attachname'],
+  'exclude'                     => true,
+	'inputType'                   => 'text',
+	'explanation'                 => 'zad_docman_tags',
+	'eval'                        => array('mandatory'=>true, 'maxlength'=>255, 'helpwizard'=>true, 'tl_class'=>'w50'),
+	'sql'                         => "varchar(255) NOT NULL default ''"
+);
+
+
+/**
+ * Class tl_module_zad_docman
+ *
+ * Provide miscellaneous methods that are used by the data configuration array.
+ *
+ * @copyright Antonello Dessì 2014
+ * @author    Antonello Dessì
+ * @package   zad_docman
+ */
+class tl_module_zad_docman extends Backend {
+
+	/**
+	 * Dynamic fields configuration for the module
+	 *
+	 * @param \DataContainer $dc  The data container for the table.
+	 */
+	public function config($dc) {
+		if ($_POST || (Input::get('act') != 'edit' && Input::get('act') != 'show')) {
+      // not in edit mode
+			return;
+		}
+		$module = ModuleModel::findByPk($dc->id);
+		if ($module === null) {
+      // record not found
+			return;
+		}
+    if ($module->type == 'zad_docman_manager') {
+      // module configuration
+      Message::addInfo($GLOBALS['TL_LANG']['tl_module']['wrn_zad_docman_js']);
+    }
+  }
+
+	/**
+	 * Return all document archives
+	 *
+	 * @param \DataContainer $dc  The data container for the table.
+	 *
+	 * @return array  A list with all document archives
+	 */
+	public function getArchives($dc) {
+    $list = array();
+    $list[0] = '';
+		$archives = $this->Database->prepare("SELECT id,name FROM tl_zad_docman_archive WHERE active=? ORDER BY name")
+					                     ->execute('1');
+    while ($archives->next()) {
+      $list[$archives->id] = $archives->name;
+    }
+    return $list;
+	}
+
+	/**
+	 * Return all fields for this archive
+	 *
+	 * @param \DataContainer $dc  The data container for the table.
+	 *
+	 * @return array  A list with all fields
+	 */
+	public function getFields($dc) {
+    $list = array();
+		$fields = $this->Database->prepare("SELECT name AS id,label AS name FROM tl_zad_docman_fields WHERE pid=? ORDER BY sorting")
+					                      ->execute($dc->activeRecord->zad_docman_archive);
+    while ($fields->next()) {
+      $list[$fields->id] = $fields->name;
+    }
+    return $list;
+	}
+
+}
 
