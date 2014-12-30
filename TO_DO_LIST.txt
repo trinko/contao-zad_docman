@@ -7,9 +7,7 @@ DA FARE:
       - scrittura documento online
       - gestione modelli
       - gestione notifiche
-  - modulo visualizzatore documenti (reader/list)
   - modulo ricerca dei documenti (search)
-  - gestione output in dati modulo (gestione separatore di lista)
   - caricamento file da esterno con cron (file presi da dir)
   - migliorare template con gestione a blocchi e html5
 --------------------------------------------

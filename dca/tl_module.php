@@ -22,6 +22,7 @@ $GLOBALS['TL_DCA']['tl_module']['config']['onload_callback'][] =
 
 // Palettes
 $GLOBALS['TL_DCA']['tl_module']['palettes']['zad_docman_manager'] = '{title_legend},name,headline,type;{config_legend},zad_docman_archive,zad_docman_list,zad_docman_docname,zad_docman_attachname,perPage;{expert_legend:hide},cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['zad_docman_reader'] = '{title_legend},name,headline,type;{config_legend},zad_docman_archive,zad_docman_filter,zad_docman_filtervalue,zad_docman_groupby,zad_docman_list,zad_docman_docname,zad_docman_attachname,perPage;{expert_legend:hide},cssID,space';
 
 // Fields
 $GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_archive'] = array(
@@ -31,6 +32,29 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_archive'] = array(
 	'options_callback'            => array('tl_module_zad_docman', 'getArchives'),
   'eval'                        => array('mandatory'=>true, 'submitOnChange'=>true, 'tl_class'=>'clr'),
 	'sql'                         => "int(10) unsigned NOT NULL default '0'"
+);
+$GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_filter'] = array(
+  'label'                       => &$GLOBALS['TL_LANG']['tl_module']['zad_docman_filter'],
+  'exclude'                     => true,
+	'inputType'                   => 'select',
+	'options_callback'            => array('tl_module_zad_docman', 'getFieldsNull'),
+	'eval'                        => array('tl_class'=>'w50'),
+	'sql'                         => "varchar(255) NOT NULL default ''"
+);
+$GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_filtervalue'] = array(
+  'label'                       => &$GLOBALS['TL_LANG']['tl_module']['zad_docman_filtervalue'],
+  'exclude'                     => true,
+	'inputType'                   => 'text',
+	'eval'                        => array('maxlength'=>255, 'tl_class'=>'w50'),
+	'sql'                         => "varchar(255) NOT NULL default ''"
+);
+$GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_groupby'] = array(
+  'label'                       => &$GLOBALS['TL_LANG']['tl_module']['zad_docman_groupby'],
+  'exclude'                     => true,
+	'inputType'                   => 'select',
+	'options_callback'            => array('tl_module_zad_docman', 'getFieldsNull'),
+	'eval'                        => array('tl_class'=>'clr w50'),
+	'sql'                         => "varchar(255) NOT NULL default ''"
 );
 $GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_list'] = array(
   'label'                       => &$GLOBALS['TL_LANG']['tl_module']['zad_docman_list'],
@@ -123,6 +147,19 @@ class tl_module_zad_docman extends Backend {
       $list[$fields->id] = $fields->name;
     }
     return $list;
+	}
+
+	/**
+	 * Return all fields for this archive and add null option
+	 *
+	 * @param \DataContainer $dc  The data container for the table.
+	 *
+	 * @return array  A list with all option
+	 */
+	public function getFieldsNull($dc) {
+    $list = $this->getFields($dc);
+    $first = array('__NULL__' => $GLOBALS['TL_LANG']['tl_module']['lbl_zad_docman_nofield']);
+    return array_merge($first, $list);
 	}
 
 }

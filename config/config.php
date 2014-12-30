@@ -31,5 +31,5 @@ $GLOBALS['BE_FFL']['sortableWizard'] = 'SortableWizard';
  * FRONT END MODULES
  */
 $GLOBALS['FE_MOD']['zad_docman']['zad_docman_manager'] = 'ModuleZadDocmanManager';
-// $GLOBALS['FE_MOD']['zad_docman']['zad_docman_reader'] = 'ModuleZadDocmanReader';
+$GLOBALS['FE_MOD']['zad_docman']['zad_docman_reader'] = 'ModuleZadDocmanReader';
 

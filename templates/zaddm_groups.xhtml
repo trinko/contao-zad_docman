@@ -1,0 +1,19 @@
+
+<!-- indexer::stop -->
+<div class="<?php echo $this->class; ?> block"<?php echo $this->cssID; ?><?php if ($this->style): ?> style="<?php echo $this->style; ?>"<?php endif; ?>>
+<?php if ($this->headline): ?><<?php echo $this->hl; ?>><?php echo $this->headline; ?></<?php echo $this->hl; ?>><?php endif; ?>
+
+<p class="headline"><?php echo $this->title; ?>:</p>
+<?php foreach ($this->groups as $item): ?>
+<?php if (isset($item['group']) && $item['group'] == 'start'): ?>
+<p><strong><?php echo $item['label']; ?></strong></p>
+<ul>
+<?php elseif (isset($item['group']) && $item['group'] == 'end'): ?>
+</ul>
+<?php else: ?>
+<<?php echo $this->tag; ?>><a href="<?php echo $item['href']; ?>"><?php echo $item['label']; ?></a></<?php echo $this->tag; ?>>
+<?php endif; ?>
+<?php endforeach; ?>
+
+</div>
+<!-- indexer::continue -->

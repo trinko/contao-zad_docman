@@ -23,5 +23,5 @@ $GLOBALS['TL_LANG']['MOD']['zad_docman'] = array('Documenti', 'Permette la gesti
  */
 $GLOBALS['TL_LANG']['FMD']['zad_docman'] = 'Documenti';
 $GLOBALS['TL_LANG']['FMD']['zad_docman_manager'] = array('Gestione documenti', 'Inserimento e modifica dei documenti.');
-// $GLOBALS['TL_LANG']['FMD']['zad_docman_reader'] = array('Visualizzazione documenti', 'Visualizzazione dei documenti.');
+$GLOBALS['TL_LANG']['FMD']['zad_docman_reader'] = array('Visualizzazione documenti', 'Visualizzazione dei documenti.');
 

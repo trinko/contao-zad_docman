@@ -65,6 +65,7 @@ $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_dropzone'] = 'Clicca o trascina qui i 
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_listother'] = 'Altro';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloaddocument'] = 'Scarica il documento';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloadattach'] = 'Scarica l\'allegato %s';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_grouped'] = 'Documenti raggruppati per %s';
 
 
 /**
