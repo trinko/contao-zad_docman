@@ -368,6 +368,7 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
     $this->Template->editing = $this->docman->editing;
     $this->Template->maxFilesize = intVal(\Config::get('maxFileSize') / (1024 * 1024));
     $this->Template->acceptedFiles = implode(',', array_map(function($a) { return '.'.$a; }, trimsplit(',', strtolower($this->docman->fileTypes))));
+    $this->Template->description = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_mandatorydesc'];
     $this->Template->lbl_document = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document'];
     $this->Template->lbl_attach = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach'];
     $this->Template->lbl_mandatory = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_mandatory'];
@@ -765,6 +766,7 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       $this->Template->editing = $this->docman->editing;
       $this->Template->maxFilesize = intVal(\Config::get('maxFileSize') / (1024 * 1024));
       $this->Template->acceptedFiles = implode(',', array_map(function($a) { return '.'.$a; }, trimsplit(',', strtolower($this->docman->fileTypes))));
+      $this->Template->description = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_mandatorydesc'];
       $this->Template->lbl_document = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document'];
       $this->Template->lbl_attach = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach'];
       $this->Template->lbl_mandatory = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_mandatory'];
@@ -964,6 +966,11 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       $doc->published = '1';
       $doc->publishedTimestamp = time();
       $doc->save();
+      // notify
+      if ($this->docman->notify) {
+        // add notify for this document
+        $this->addNotify($doc);
+      }
 			// add a log entry for published file
       $this->log('ZAD DocMan - Published document with ID '.$id, __METHOD__, 'ZAD_DOCMAN');
     } elseif (!$to_publish && $doc->published) {
@@ -979,6 +986,11 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       $doc->published = '';
       $doc->publishedTimestamp = 0;
       $doc->save();
+      // notify
+      if ($this->docman->notify) {
+        // remove notify for this document
+        $this->removeNotify($doc);
+      }
 			// add a log entry for published file
       $this->log('ZAD DocMan - Unpublished document with ID '.$id, __METHOD__, 'ZAD_DOCMAN');
     }
@@ -1494,6 +1506,90 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       }
     }
     return $uuid;
+  }
+
+	/**
+	 * Add notify for this document
+	 *
+	 * @param \ZadDocmanModel $doc  The document
+	 */
+	private function addNotify($doc) {
+    $notify = new \ZadDocmanNotifyModel();
+    // get fields
+    $fields = $this->getFields();
+    $data = \ZadDocmanDataModel::findByPid($doc->id);
+    // create a data array structure
+    $data_array = array();
+    while ($data->next()) {
+      $data_array[$data->field] = $data->value;
+    }
+    // set data values
+    $values = array();
+    foreach ($fields as $kfld=>$fld) {
+      $values[$kfld] = $this->formatFieldText($data_array[$kfld], $fld);
+    }
+    // extract recipients
+    $recipients = array();
+		$db = \Database::getInstance();
+    foreach (deserialize($this->docman->notifyGroups) as $group) {
+      $sql = "SELECT t.email ".
+             "FROM tl_member AS t ".
+             "WHERE t.groups LIKE '%:\"$group\";%'";
+      $res = $db->execute($sql);
+      while ($res->next()) {
+        $recipients[] = $res->email;
+      }
+    }
+    if ($this->docman->notifyCollect) {
+      // add notify to collect
+      $notify->pid = $doc->id;
+      $notify->tstamp = time();
+      $notify->subject = '';
+      $notify->text = serialize($values);
+      $notify->recipients = serialize($recipients);
+      $notify->state = 'GROUP-'.$this->docman->id;
+      $notify->save();
+    } else {
+      // add single notify
+      $notify->pid = $doc->id;
+      $notify->tstamp = time();
+      $notify->subject = $this->docman->notifySubject;
+      $notify->text = $this->insertFields($this->docman->notifyText, $values);
+      $notify->recipients = serialize($recipients);
+      $notify->state = 'SEND';
+      $notify->save();
+    }
+  }
+
+  /**
+	 * Insert field values in text
+	 *
+	 * @param string $text  The text
+	 * @param array $fields  The data fields
+	 *
+	 * @return string  The new text
+	 */
+	private function insertFields($text, $fields) {
+    // clean text
+    $text = str_replace('[nbsp]', ' ', $text);
+    // replace insert tags (ignore tag repeat)
+    foreach ($fields as $kfld=>$fld) {
+      $text = str_replace('{{field:'.$kfld.'}}', $fld, $text);
+    }
+    return $text;
+  }
+
+	/**
+	 * Remove notify for this document
+	 *
+	 * @param \ZadDocmanModel $doc  The document
+	 */
+	private function removeNotify($doc) {
+    $notify = \ZadDocmanNotifyModel::findByPid($doc->id);
+    if ($notify !== null) {
+      // remove
+      $notify->delete();
+    }
   }
 
 }

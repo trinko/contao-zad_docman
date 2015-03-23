@@ -66,6 +66,7 @@ $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_listother'] = 'Altro';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloaddocument'] = 'Scarica il documento';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloadattach'] = 'Scarica l\'allegato %s';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_grouped'] = 'Documenti raggruppati per %s';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_mandatorydesc'] = 'I campi contrassegnati con l\'asterisco sono obbligatori.';
 
 
 /**

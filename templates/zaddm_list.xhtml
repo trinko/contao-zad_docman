@@ -4,7 +4,7 @@
 <?php if ($this->headline): ?><<?php echo $this->hl; ?>><?php echo $this->headline; ?></<?php echo $this->hl; ?>><?php endif; ?>
 
 <?php if (count($this->docs) > 0): ?>
-<table summary="<?php echo $this->lbl_documentlist; ?>" cellspacing="0" cellpadding="0">
+<table class="zaddm_documentlist" summary="<?php echo $this->lbl_documentlist; ?>">
 <caption><?php echo $this->lbl_documentlist; ?></caption>
 <thead>
   <tr>
@@ -16,18 +16,18 @@
   </tr>
 </thead>
 <tbody>
-<?php foreach ($this->docs as $item): ?>
-  <tr>
+<?php foreach ($this->docs as $kitem=>$item): ?>
+  <tr class="row_<?php echo($kitem % 2); ?>">
     <td><?php echo $this->$item['status']; ?></td>
     <?php foreach($item['values'] as $value): ?>
     <td><?php echo $value ; ?></td>
     <?php endforeach; ?>
     <td>
-      <a href="<?php echo $item['href_show']; ?>"><?php echo $this->but_show; ?></a>
-      <?php if ($item['href_publish']): ?><a href="<?php echo $item['href_publish']; ?>"><?php echo $this->but_publish; ?></a><?php endif; ?>
-      <?php if ($item['href_unpublish']): ?><a href="<?php echo $item['href_unpublish']; ?>"><?php echo $this->but_unpublish; ?></a><?php endif; ?>
-      <?php if ($item['href_edit']): ?><a href="<?php echo $item['href_edit']; ?>"><?php echo $this->but_edit; ?></a><?php endif; ?>
-      <?php if ($item['href_delete']): ?><a href="<?php echo $item['href_delete']; ?>"><?php echo $this->but_delete; ?></a><?php endif; ?>
+      <a class="button" href="<?php echo $item['href_show']; ?>"><?php echo $this->but_show; ?></a>
+      <?php if ($item['href_publish']): ?><a class="button" href="<?php echo $item['href_publish']; ?>"><?php echo $this->but_publish; ?></a><?php endif; ?>
+      <?php if ($item['href_unpublish']): ?><a class="button" href="<?php echo $item['href_unpublish']; ?>"><?php echo $this->but_unpublish; ?></a><?php endif; ?>
+      <?php if ($item['href_edit']): ?><a class="button" href="<?php echo $item['href_edit']; ?>"><?php echo $this->but_edit; ?></a><?php endif; ?>
+      <?php if ($item['href_delete']): ?><a class="button" href="<?php echo $item['href_delete']; ?>"><?php echo $this->but_delete; ?></a><?php endif; ?>
     </td>
   </tr>
 <?php endforeach; ?>
@@ -37,8 +37,9 @@
 <p><?php echo $this->wrn_nodata; ?></p>
 <?php endif; ?>
 
-<p><a href="<?php echo $this->href_add; ?>"><?php echo $this->but_add; ?></a></p>
-
+<div class="zadam_actions">
+  <a class="button" href="<?php echo $this->href_add; ?>"><?php echo $this->but_add; ?></a>
+</div>
 <?php echo $this->pagination; ?>
 
 </div>

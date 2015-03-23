@@ -239,7 +239,7 @@ $GLOBALS['TL_DCA']['tl_zad_docman_archive'] = array(
 			'label'                       => &$GLOBALS['TL_LANG']['tl_zad_docman_archive']['notifyText'],
 			'exclude'                     => true,
 			'inputType'                   => 'textarea',
-			'explanation'                 => 'zad_docman_tags',
+			'explanation'                 => 'zad_docman_notifytags',
 			'eval'                        => array('mandatory'=>true, 'rte'=>'tinyMCE', 'helpwizard'=>true, 'tl_class'=>'clr'),
 			'sql'                         => "text NULL"
 		),

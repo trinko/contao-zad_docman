@@ -110,7 +110,7 @@ class ModuleZadDocmanReader extends \ModuleZadDocman {
       }
     } else {
       // set template
-      $this->Template = new \FrontendTemplate('zaddm_reader');
+      $this->Template = new \FrontendTemplate('zaddr_reader');
       // pagination
       $limit = null;
       $offset = null;
@@ -195,7 +195,7 @@ class ModuleZadDocmanReader extends \ModuleZadDocman {
 	 */
 	private function showDocumentGroups($groups, $field, $url) {
     // set template
-    $this->Template = new \FrontendTemplate('zaddm_groups');
+    $this->Template = new \FrontendTemplate('zaddr_groups');
     // set groups
     $group_list = array();
     $index = 0;

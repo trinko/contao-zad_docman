@@ -3,7 +3,7 @@
 /**
  * Contao Open Source CMS
  *
- * Copyright (c) 2005-2014 Leo Feyer
+ * Copyright (c) 2005-2015 Leo Feyer
  *
  * @package Zad_docman
  * @link    https://contao.org
@@ -26,11 +26,15 @@ ClassLoader::addNamespaces(array
  */
 ClassLoader::addClasses(array
 (
+	// Classes
+	'zad_docman\ZadDocman'              => 'system/modules/zad_docman/classes/ZadDocman.php',
+
 	// Models
 	'zad_docman\ZadDocmanArchiveModel'  => 'system/modules/zad_docman/models/ZadDocmanArchiveModel.php',
 	'zad_docman\ZadDocmanDataModel'     => 'system/modules/zad_docman/models/ZadDocmanDataModel.php',
 	'zad_docman\ZadDocmanFieldsModel'   => 'system/modules/zad_docman/models/ZadDocmanFieldsModel.php',
 	'zad_docman\ZadDocmanModel'         => 'system/modules/zad_docman/models/ZadDocmanModel.php',
+	'zad_docman\ZadDocmanNotifyModel'   => 'system/modules/zad_docman/models/ZadDocmanNotifyModel.php',
 
 	// Modules
 	'zad_docman\ModuleZadDocman'        => 'system/modules/zad_docman/modules/ModuleZadDocman.php',
@@ -49,9 +53,10 @@ TemplateLoader::addFiles(array
 (
 	'zaddm_confirm' => 'system/modules/zad_docman/templates',
 	'zaddm_edit'    => 'system/modules/zad_docman/templates',
-	'zaddm_groups'  => 'system/modules/zad_docman/templates',
 	'zaddm_list'    => 'system/modules/zad_docman/templates',
+	'zaddm_mail'    => 'system/modules/zad_docman/templates',
 	'zaddm_message' => 'system/modules/zad_docman/templates',
-	'zaddm_reader'  => 'system/modules/zad_docman/templates',
 	'zaddm_show'    => 'system/modules/zad_docman/templates',
+	'zaddr_groups'  => 'system/modules/zad_docman/templates',
+	'zaddr_reader'  => 'system/modules/zad_docman/templates',
 ));

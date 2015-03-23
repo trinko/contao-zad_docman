@@ -33,3 +33,10 @@ $GLOBALS['BE_FFL']['sortableWizard'] = 'SortableWizard';
 $GLOBALS['FE_MOD']['zad_docman']['zad_docman_manager'] = 'ModuleZadDocmanManager';
 $GLOBALS['FE_MOD']['zad_docman']['zad_docman_reader'] = 'ModuleZadDocmanReader';
 
+
+/**
+ * CRON JOBS
+ */
+$GLOBALS['TL_CRON']['hourly'][] = array('ZadDocman', 'singleNotify');
+$GLOBALS['TL_CRON']['daily'][] = array('ZadDocman', 'groupedNotify');
+

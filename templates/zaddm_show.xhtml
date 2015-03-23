@@ -3,26 +3,35 @@
 <div class="<?php echo $this->class; ?> block"<?php echo $this->cssID; ?><?php if ($this->style): ?> style="<?php echo $this->style; ?>"<?php endif; ?>>
 <?php if ($this->headline): ?><<?php echo $this->hl; ?>><?php echo $this->headline; ?></<?php echo $this->hl; ?>><?php endif; ?>
 
-<div class="headline"><p><?php echo $this->header; ?></p></div>
-<ul>
+<h2><?php echo $this->header; ?></h2>
+<table class="zaddm_show">
+<tbody>
 <?php foreach($this->values as $item): ?>
-  <li><?php echo $item['label']; ?>: <?php echo $item['value']; ?></li>
+  <tr>
+    <td class="zaddm_label"><?php echo $item['label']; ?></td>
+    <td class="zaddm_value"><?php echo $item['value']; ?></td>
+  </tr>
 <?php endforeach; ?>
-</ul>
-<p><?php echo $this->lbl_document; ?>:</p>
-<ul>
-  <li><a href="<?php echo $this->href_document; ?>"><?php echo $this->lbl_downloaddocument; ?></a></li>
-</ul>
+  <tr>
+    <td class="zaddm_label"><?php echo $this->lbl_document; ?></td>
+    <td class="zaddm_value"><a href="<?php echo $this->href_document; ?>"><?php echo $this->lbl_downloaddocument; ?></a></td>
+  </tr>
 <?php if (count($this->attach)): ?>
-<p><?php echo $this->lbl_attach; ?>:</p>
-<ul>
+  <tr>
+    <td class="zaddm_label"><?php echo $this->lbl_attach; ?></td>
+    <td class="zaddm_value">
 <?php foreach($this->attach as $item): ?>
-  <li><a href="<?php echo $item['href']; ?>"><?php echo $item['label']; ?></a></li>
+      <a href="<?php echo $item['href']; ?>"><?php echo $item['label']; ?></a>
 <?php endforeach; ?>
-</ul>
+    </td>
+  </tr>
 <?php endif; ?>
-
-<p class="back"><a href="<?php echo $this->referer; ?>" title="<?php echo $this->back; ?>"><?php echo $this->back; ?></a></p>
+  <tr>
+    <td>&nbsp;</td>
+    <td class="zadam_buttons"><a class="button" href="<?php echo $this->referer; ?>" title="<?php echo $this->back; ?>"><?php echo $this->back; ?></a></td>
+  </tr>
+</tbody>
+</table>
 
 </div>
 <!-- indexer::continue -->
