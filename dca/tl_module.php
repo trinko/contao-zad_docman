@@ -29,8 +29,8 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_archive'] = array(
   'label'                       => &$GLOBALS['TL_LANG']['tl_module']['zad_docman_archive'],
   'exclude'                     => true,
   'inputType'                   => 'select',
-	'options_callback'            => array('tl_module_zad_docman', 'getArchives'),
-  'eval'                        => array('mandatory'=>true, 'submitOnChange'=>true, 'tl_class'=>'clr'),
+  'foreignKey'                  => 'tl_zad_docman_archive.name',
+  'eval'                        => array('mandatory'=>true, 'submitOnChange'=>true, 'includeBlankOption'=>true, 'tl_class'=>'clr'),
 	'sql'                         => "int(10) unsigned NOT NULL default '0'"
 );
 $GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_filter'] = array(
@@ -115,24 +115,6 @@ class tl_module_zad_docman extends Backend {
   }
 
 	/**
-	 * Return all document archives
-	 *
-	 * @param \DataContainer $dc  The data container for the table.
-	 *
-	 * @return array  A list with all document archives
-	 */
-	public function getArchives($dc) {
-    $list = array();
-    $list[0] = '';
-		$archives = $this->Database->prepare("SELECT id,name FROM tl_zad_docman_archive WHERE active=? ORDER BY name")
-					                     ->execute('1');
-    while ($archives->next()) {
-      $list[$archives->id] = $archives->name;
-    }
-    return $list;
-	}
-
-	/**
 	 * Return all fields for this archive
 	 *
 	 * @param \DataContainer $dc  The data container for the table.
@@ -141,10 +123,10 @@ class tl_module_zad_docman extends Backend {
 	 */
 	public function getFields($dc) {
     $list = array();
-		$fields = $this->Database->prepare("SELECT name AS id,label AS name FROM tl_zad_docman_fields WHERE pid=? ORDER BY sorting")
+		$fields = $this->Database->prepare("SELECT name,label FROM tl_zad_docman_fields WHERE pid=? ORDER BY sorting")
 					                      ->execute($dc->activeRecord->zad_docman_archive);
     while ($fields->next()) {
-      $list[$fields->id] = $fields->name;
+      $list[$fields->name] = $fields->label;
     }
     return $list;
 	}

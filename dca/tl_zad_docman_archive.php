@@ -91,7 +91,7 @@ $GLOBALS['TL_DCA']['tl_zad_docman_archive'] = array(
 	// Palettes
 	'palettes' => array(
 		'__selector__'                  => array('editing', 'notify'),
-		'default'                       => '{settings_legend},name,manager,groups,enableOthers,waitingTime;{documents_legend},dir,fileTypes,enableAttach,enablePdf;{editing_legend},editing;{notify_legend:hide},notify;'
+		'default'                       => '{settings_legend},name,manager,groups,enableOthers;{documents_legend},dir,fileTypes,enableAttach,enablePdf,waitingTime;{editing_legend},editing;{notify_legend:hide},notify;'
 	),
 	// Subpalettes
 	'subpalettes' => array(
@@ -128,7 +128,7 @@ $GLOBALS['TL_DCA']['tl_zad_docman_archive'] = array(
 			'exclude'                     => true,
 			'inputType'                   => 'checkbox',
 			'foreignKey'                  => 'tl_member_group.name',
-			'eval'                        => array('multiple'=>true, 'tl_class'=>'w50'),
+			'eval'                        => array('multiple'=>true, 'tl_class'=>'w50 m12'),
 			'sql'                         => "blob NULL",
 			'relation'                    => array('type'=>'hasMany', 'load'=>'eager')
 		),
@@ -136,18 +136,8 @@ $GLOBALS['TL_DCA']['tl_zad_docman_archive'] = array(
 			'label'                       => &$GLOBALS['TL_LANG']['tl_zad_docman_archive']['enableOthers'],
 			'exclude'                     => true,
 			'inputType'                   => 'checkbox',
-			'eval'                        => array('tl_class'=>'w50'),
+			'eval'                        => array('tl_class'=>'w50 m12'),
 			'sql'                         => "char(1) NOT NULL default ''"
-		),
-		'waitingTime' => array(
-			'label'                       => &$GLOBALS['TL_LANG']['tl_zad_docman_archive']['waitingTime'],
-			'exclude'                     => true,
-			'inputType'                   => 'select',
-		  'default'                     => 'wt_0',
-		  'options'                     => array('wt_0', 'wt_1', 'wt_2', 'wt_3', 'wt_6', 'wt_12', 'wt_24'),
-			'reference'                   => &$GLOBALS['TL_LANG']['tl_zad_docman_archive'],
-			'eval'                        => array('mandatory'=>true, 'tl_class'=>'clr w50'),
-			'sql'                         => "varchar(16) NOT NULL default ''"
 		),
 		'dir' => array(
 			'label'                       => &$GLOBALS['TL_LANG']['tl_zad_docman_archive']['dir'],
@@ -169,15 +159,25 @@ $GLOBALS['TL_DCA']['tl_zad_docman_archive'] = array(
 			'label'                       => &$GLOBALS['TL_LANG']['tl_zad_docman_archive']['enableAttach'],
 			'exclude'                     => true,
 			'inputType'                   => 'checkbox',
-			'eval'                        => array('tl_class'=>'clr w50'),
+			'eval'                        => array('tl_class'=>'clr w50 m12'),
 			'sql'                         => "char(1) NOT NULL default ''"
 		),
 		'enablePdf' => array(
 			'label'                       => &$GLOBALS['TL_LANG']['tl_zad_docman_archive']['enablePdf'],
 			'exclude'                     => true,
 			'inputType'                   => 'checkbox',
-			'eval'                        => array('tl_class'=>'w50'),
+			'eval'                        => array('tl_class'=>'w50 m12'),
 			'sql'                         => "char(1) NOT NULL default ''"
+		),
+		'waitingTime' => array(
+			'label'                       => &$GLOBALS['TL_LANG']['tl_zad_docman_archive']['waitingTime'],
+			'exclude'                     => true,
+			'inputType'                   => 'select',
+		  'default'                     => 'wt_0',
+		  'options'                     => array('wt_0', 'wt_1', 'wt_2', 'wt_3', 'wt_6', 'wt_12', 'wt_24'),
+			'reference'                   => &$GLOBALS['TL_LANG']['tl_zad_docman_archive'],
+			'eval'                        => array('mandatory'=>true, 'tl_class'=>'clr w50'),
+			'sql'                         => "varchar(16) NOT NULL default ''"
 		),
 		'editing' => array(
 			'label'                       => &$GLOBALS['TL_LANG']['tl_zad_docman_archive']['editing'],
