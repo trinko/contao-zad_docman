@@ -3,12 +3,12 @@
 /**
  * Contao Open Source CMS
  *
- * Copyright (c) 2005-2014 Leo Feyer
+ * Copyright (c) 2005-2015 Leo Feyer
  *
  * @package   zad_docman
  * @author    Antonello Dessì
  * @license   LGPL
- * @copyright Antonello Dessì 2014
+ * @copyright Antonello Dessì 2015
  */
 
 
@@ -87,7 +87,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['zad_docman_attachname'] = array(
  *
  * Provide miscellaneous methods that are used by the data configuration array.
  *
- * @copyright Antonello Dessì 2014
+ * @copyright Antonello Dessì 2015
  * @author    Antonello Dessì
  * @package   zad_docman
  */

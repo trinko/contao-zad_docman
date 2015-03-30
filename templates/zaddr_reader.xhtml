@@ -7,7 +7,7 @@
 <?php foreach ($this->docs as $item): ?>
 <div class="zaddr_document">
   <?php foreach($item['values'] as $kvalue=>$value): ?>
-  <p class="zaddr_field"><span class="zaddr_fieldname"><?php echo $this->fields[$kvalue]['label']; ?></span>:<span class="zaddm_fieldvalue"><?php echo $value ; ?></span></p>
+  <p class="zaddr_field zaddr_field_<?php echo $kvalue; ?>"><span class="zaddr_fieldname"><?php echo $this->fields[$kvalue]['label']; ?></span>:<span class="zaddr_fieldvalue"><?php echo $value ; ?></span></p>
   <?php endforeach; ?>
   <ul class="zaddr_file">
     <li><a href="<?php echo $item['href_document']; ?>"><?php echo $this->lbl_downloaddocument; ?></a></li>

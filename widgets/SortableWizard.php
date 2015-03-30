@@ -3,12 +3,12 @@
 /**
  * Contao Open Source CMS
  *
- * Copyright (c) 2005-2014 Leo Feyer
+ * Copyright (c) 2005-2015 Leo Feyer
  *
  * @package   zad_docman
  * @author    Antonello Dessì
  * @license   LGPL
- * @copyright Antonello Dessì 2014
+ * @copyright Antonello Dessì 2015
  */
 
 
@@ -23,7 +23,7 @@ namespace contao;
  *
  * Provide methods to handle info fields for document manager.
  *
- * @copyright Antonello Dessì 2014
+ * @copyright Antonello Dessì 2015
  * @author    Antonello Dessì
  * @package   zad_docman
  */
