@@ -54,11 +54,11 @@ $GLOBALS['TL_DCA']['tl_zad_docman_archive'] = array(
 				'href'                      => 'act=edit',
 				'icon'                      => 'edit.gif'
 			),
-			'templates' => array(
-				'label'                     => &$GLOBALS['TL_LANG']['tl_zad_docman_archive']['templates'],
-				'href'                      => 'table=tl_zad_docman_templates',
-				'icon'                      => 'system/modules/zad_docman/assets/templates.gif'
-			),
+// 			'templates' => array(
+// 				'label'                     => &$GLOBALS['TL_LANG']['tl_zad_docman_archive']['templates'],
+// 				'href'                      => 'table=tl_zad_docman_templates',
+// 				'icon'                      => 'system/modules/zad_docman/assets/templates.gif'
+// 			),
 			'fields' => array(
 				'label'                     => &$GLOBALS['TL_LANG']['tl_zad_docman_archive']['fields'],
 				'href'                      => 'table=tl_zad_docman_fields',
@@ -91,11 +91,12 @@ $GLOBALS['TL_DCA']['tl_zad_docman_archive'] = array(
 	// Palettes
 	'palettes' => array(
 		'__selector__'                  => array('editing', 'notify'),
-		'default'                       => '{settings_legend},name,manager,groups,enableOthers;{documents_legend},dir,fileTypes,enableAttach,enablePdf,waitingTime;{editing_legend},editing;{notify_legend:hide},notify;'
+// 		'default'                       => '{settings_legend},name,manager,groups,enableOthers;{documents_legend},dir,fileTypes,enableAttach,enablePdf,waitingTime;{editing_legend},editing;{notify_legend:hide},notify;'
+		'default'                       => '{settings_legend},name,manager,groups,enableOthers;{documents_legend},dir,fileTypes,enableAttach,enablePdf,waitingTime;{notify_legend:hide},notify;'
 	),
 	// Subpalettes
 	'subpalettes' => array(
-		'editing'                       => 'template,showTemplates',
+// 		'editing'                       => 'template,showTemplates',
 		'notify'                        => 'notifyGroups,notifyCollect,notifySubject,notifyText'
 	),
 	// Fields
