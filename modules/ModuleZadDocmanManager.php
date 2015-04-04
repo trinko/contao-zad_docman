@@ -1489,10 +1489,14 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       // convert
       $filename = $file->path;
       $filename_pdf = substr($filename, 0, - strlen($file->extension)) . 'pdf';
-      $cmd = 'python "' . TL_ROOT . '/system/modules/zad_docman/vendor/pyodconverter-1.9/main.py" ' .
-             '"' . TL_ROOT . '/' . $filename . '" "' . TL_ROOT . '/' . $filename_pdf . '"';
+      $dirname = pathinfo($filename, PATHINFO_DIRNAME);
+      $cmd =
+        'export HOME=/tmp && '.
+        'soffice --headless --norestore --nolockcheck --convert-to pdf '.
+        '--outdir "'.TL_ROOT.'/'.$dirname.'" '.
+        '"'.TL_ROOT.'/'.$filename.'" 2>&1';
       $res = exec($cmd);
-      if (strlen($res) == 0 && file_exists(TL_ROOT . '/' . $filename_pdf)) {
+      if (file_exists(TL_ROOT . '/' . $filename_pdf)) {
         // PDF file created, remove original file
         unlink(TL_ROOT . '/' . $filename);
         $file->delete();
