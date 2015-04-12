@@ -639,6 +639,9 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       if ($id == 0) {
         // new document
   		  $doc = new \ZadDocmanModel();
+      } elseif ($doc->published) {
+        // remove notification for this document
+        $this->removeNotification($doc);
       }
       $doc->pid = $this->docman->id;
       $doc->tstamp = time();
@@ -910,6 +913,10 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
         $data->delete();
       }
     }
+    if ($doc->published) {
+      // remove notification for this document
+      $this->removeNotification($doc);
+    }
     // delete document
     $doc->delete();
     // go to document list
@@ -968,8 +975,8 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       $doc->save();
       // notify
       if ($this->docman->notify) {
-        // add notify for this document
-        $this->addNotify($doc);
+        // add a notification for this document
+        $this->addNotification($doc);
       }
 			// add a log entry for published file
       $this->log('ZAD DocMan - Published document with ID '.$id, __METHOD__, 'ZAD_DOCMAN');
@@ -986,10 +993,10 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       $doc->published = '';
       $doc->publishedTimestamp = 0;
       $doc->save();
-      // notify
+      // notification
       if ($this->docman->notify) {
-        // remove notify for this document
-        $this->removeNotify($doc);
+        // remove notification for this document
+        $this->removeNotification($doc);
       }
 			// add a log entry for published file
       $this->log('ZAD DocMan - Unpublished document with ID '.$id, __METHOD__, 'ZAD_DOCMAN');
@@ -1513,11 +1520,11 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
   }
 
 	/**
-	 * Add notify for this document
+	 * Add a notification for this document
 	 *
 	 * @param \ZadDocmanModel $doc  The document
 	 */
-	private function addNotify($doc) {
+	private function addNotification($doc) {
     $notify = new \ZadDocmanNotifyModel();
     // get fields
     $fields = $this->getFields();
@@ -1545,7 +1552,7 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       }
     }
     if ($this->docman->notifyCollect) {
-      // add notify to collect
+      // add a collected notification
       $notify->pid = $doc->id;
       $notify->tstamp = time();
       $notify->subject = '';
@@ -1554,7 +1561,7 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       $notify->state = 'GROUP-'.$this->docman->id;
       $notify->save();
     } else {
-      // add single notify
+      // add single notification
       $notify->pid = $doc->id;
       $notify->tstamp = time();
       $notify->subject = $this->docman->notifySubject;
@@ -1584,11 +1591,11 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
   }
 
 	/**
-	 * Remove notify for this document
+	 * Remove notification for this document
 	 *
 	 * @param \ZadDocmanModel $doc  The document
 	 */
-	private function removeNotify($doc) {
+	private function removeNotification($doc) {
     $notify = \ZadDocmanNotifyModel::findByPid($doc->id);
     if ($notify !== null) {
       // remove
