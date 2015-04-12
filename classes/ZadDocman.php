@@ -38,9 +38,9 @@ class ZadDocman extends \Backend {
 
 
 	/**
-	 * Create a single notify.
+	 * Send a notification.
 	 */
-	public function singleNotify() {
+	public function notify() {
 		$db = \Database::getInstance();
     $sql = "SELECT n.*,d.publishedTimestamp,a.waitingTime ".
            "FROM tl_zad_docman_notify AS n,tl_zad_docman AS d,tl_zad_docman_archive AS a ".
@@ -48,11 +48,12 @@ class ZadDocman extends \Backend {
     $res = $db->execute($sql);
     while ($res->next()) {
       $waiting_time = intval(substr($res->waitingTime, 3)) * 3600;
-      if (($res->publishedTimestamp + $waiting_time) < time()) {
-        // send notify
+      if (($res->publishedTimestamp + $waiting_time) <= time()) {
+        // send a notification
         $this->send(deserialize($res->recipients), $res->subject, $res->text);
-        // remove notify
-        $sql = "DELETE FROM tl_zad_docman_notify ".
+        // notification sent
+        $sql = "UPDATE tl_zad_docman_notify ".
+               "SET state='SENT',tstamp=".time()." ".
                "WHERE id=".$res->id;
         $db->execute($sql);
       }
@@ -60,9 +61,9 @@ class ZadDocman extends \Backend {
   }
 
 	/**
-	 * Create a grouped notify.
+	 * Send a collected notification.
 	 */
-	public function groupedNotify() {
+	public function notifyCollected() {
 		$db = \Database::getInstance();
     $sql = "SELECT a.* ".
            "FROM tl_zad_docman_archive AS a ".
@@ -80,31 +81,33 @@ class ZadDocman extends \Backend {
         $sql = "SELECT n.*,d.publishedTimestamp ".
                "FROM tl_zad_docman_notify AS n,tl_zad_docman AS d ".
                "WHERE n.pid=d.id AND d.pid=".$res->id." AND n.state='GROUP-".$res->id."'";
-        $notifies = $db->execute($sql);
-        while ($notifies->next()) {
-          if (($notifies->publishedTimestamp + $waiting_time) < time()) {
-            $recipients = deserialize($notifies->recipients);
+        $notify = $db->execute($sql);
+        $timestamp = time();
+        while ($notify->next()) {
+          if (($notify->publishedTimestamp + $waiting_time) <= time()) {
+            $recipients = deserialize($notify->recipients);
             // replace insert tags (ignore tag repeat)
             $txt = $parts[2];
-            foreach (deserialize($notifies->text) as $kfld=>$fld) {
+            foreach (deserialize($notify->text) as $kfld=>$fld) {
               $txt = str_replace('{{field:'.$kfld.'}}', $fld, $txt);
             }
             $text_repeat .= $txt;
-            // remove notify
-            $sql = "DELETE FROM tl_zad_docman_notify ".
-                   "WHERE id=".$notifies->id;
+            // notification sent
+            $sql = "UPDATE tl_zad_docman_notify ".
+                   "SET state='SENT',tstamp=$timestamp ".
+                   "WHERE id=".$notify->id;
             $db->execute($sql);
           }
         }
         $text = $parts[1].$text_repeat.$parts[3];
-        // send notify
+        // send a notification
         $this->send($recipients, $subject, $text);
       }
     }
   }
 
 	/**
-	 * Send a notify.
+	 * Send a notification.
 	 *
 	 * @param array $recipients  List of emails.
 	 * @param string $subject  Subject of email.

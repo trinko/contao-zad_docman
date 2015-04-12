@@ -26,6 +26,12 @@
     </td>
   </tr>
 <?php endif; ?>
+<?php if (isset($this->notification)): ?>
+  <tr>
+    <td class="zaddm_label"><?php echo $this->lbl_notification; ?></td>
+    <td class="zaddm_value"><?php echo $this->notification; ?></td>
+  </tr>
+<?php endif; ?>
   <tr>
     <td>&nbsp;</td>
     <td class="zadam_buttons"><a class="button" href="<?php echo $this->referer; ?>" title="<?php echo $this->back; ?>"><?php echo $this->back; ?></a></td>

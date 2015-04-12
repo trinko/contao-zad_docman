@@ -37,6 +37,6 @@ $GLOBALS['FE_MOD']['zad_docman']['zad_docman_reader'] = 'ModuleZadDocmanReader';
 /**
  * CRON JOBS
  */
-$GLOBALS['TL_CRON']['hourly'][] = array('ZadDocman', 'singleNotify');
-$GLOBALS['TL_CRON']['daily'][] = array('ZadDocman', 'groupedNotify');
+$GLOBALS['TL_CRON']['hourly'][] = array('ZadDocman', 'notify');
+$GLOBALS['TL_CRON']['daily'][] = array('ZadDocman', 'notifyCollected');
 

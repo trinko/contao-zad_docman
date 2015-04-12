@@ -1053,14 +1053,28 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
         'value' => $this->formatFieldText($data_array[$kfld], $fld));
     }
     // set status
+    $notification = null;
     $waiting_time = intval(substr($this->docman->waitingTime, 3)) * 3600;
-    if ($doc->published && ($doc->publishedTimestamp + $waiting_time) >= time()) {
+    if ($doc->published && ($doc->publishedTimestamp + $waiting_time) > time()) {
       $date = new \Date($doc->publishedTimestamp);
       $status = sprintf($GLOBALS['TL_LANG']['tl_zad_docman']['lbl_waitingtm'], $date->datim);
     } elseif ($doc->published) {
       // published document
       $date = new \Date($doc->publishedTimestamp);
       $status = sprintf($GLOBALS['TL_LANG']['tl_zad_docman']['lbl_publishedtm'], $date->datim);
+      // notification
+      $notify = \ZadDocmanNotifyModel::findByPid($doc->id);
+      if ($notify !== null) {
+        // notification info
+        if ($notify->state == 'SEND') {
+          $notification = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifysend'];
+        } elseif (substr($notify->state, 0, 6) == 'GROUP-') {
+          $notification = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifygroup'];
+        } elseif ($notify->state == 'SENT') {
+          $date = new \Date($notify->tstamp);
+          $notification = sprintf($GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifysent'], $date->datim);
+        }
+      }
     } else {
       // draft document
       $date = new \Date($doc->tstamp);
@@ -1096,9 +1110,11 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
 		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
 		$this->Template->href_document = $href_document;
   	$this->Template->attach = $attach;
+  	$this->Template->notification = $notification;
     $this->Template->lbl_document = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document'];
     $this->Template->lbl_attach = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach'];
     $this->Template->lbl_downloaddocument = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloaddocument'];
+    $this->Template->lbl_notification = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notification'];
   }
 
 	/**
@@ -1152,7 +1168,7 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
         $param = array();
         $data[$index]['id'] = $docs->id;
         // set status
-        if ($docs->published && ($docs->publishedTimestamp + $waiting_time) >= time()) {
+        if ($docs->published && ($docs->publishedTimestamp + $waiting_time) > time()) {
           $data[$index]['status'] = 'st_waiting';
         } elseif ($docs->published) {
           // published document
@@ -1547,10 +1563,9 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
              "FROM tl_member AS t ".
              "WHERE t.groups LIKE '%:\"$group\";%'";
       $res = $db->execute($sql);
-      while ($res->next()) {
-        $recipients[] = $res->email;
-      }
+      $recipients = array_merge($recipients, $res->fetchEach('email'));
     }
+    $recipients = array_unique($recipients);
     if ($this->docman->notifyCollect) {
       // add a collected notification
       $notify->pid = $doc->id;
@@ -1582,7 +1597,7 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
 	 */
 	private function insertFields($text, $fields) {
     // clean text
-    $text = str_replace('[nbsp]', ' ', $text);
+    $text = str_replace(array('[nbsp]','{{repeat:start}}','{{repeat:end}}'), ' ', $text);
     // replace insert tags (ignore tag repeat)
     foreach ($fields as $kfld=>$fld) {
       $text = str_replace('{{field:'.$kfld.'}}', $fld, $text);

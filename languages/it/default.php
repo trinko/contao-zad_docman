@@ -49,7 +49,7 @@ $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentlist'] = 'Documenti caricati';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentadd'] = 'Inserisci un nuovo documento';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentedit'] = 'Modifica il seguente documento';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentdelete'] = 'Cancella il seguente documento';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentshow'] = 'Anteprima del documento';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentshow'] = 'Dettagli del documento';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_mandatory'] = 'Campo obbligatorio';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document'] = 'Documento';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach'] = 'Allegati';
@@ -67,6 +67,10 @@ $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloaddocument'] = 'Scarica il docum
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloadattach'] = 'Scarica l\'allegato %s';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_grouped'] = 'Documenti raggruppati per %s';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_mandatorydesc'] = 'I campi contrassegnati con l\'asterisco sono obbligatori.';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notification'] = 'Notifica';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifysend'] = 'Da inviare entro un\'ora';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifygroup'] = 'Da inviare a fine giornata';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifysent'] = 'Inviata il %s';
 
 
 /**
@@ -76,7 +80,7 @@ $GLOBALS['TL_LANG']['tl_zad_docman']['but_save'] = 'Salva';
 $GLOBALS['TL_LANG']['tl_zad_docman']['but_cancel'] = 'Annulla';
 $GLOBALS['TL_LANG']['tl_zad_docman']['but_confirm'] = 'Conferma';
 $GLOBALS['TL_LANG']['tl_zad_docman']['but_add'] = 'Nuovo documento';
-$GLOBALS['TL_LANG']['tl_zad_docman']['but_show'] = 'Anteprima';
+$GLOBALS['TL_LANG']['tl_zad_docman']['but_show'] = 'Dettagli';
 $GLOBALS['TL_LANG']['tl_zad_docman']['but_publish'] = 'Pubblica';
 $GLOBALS['TL_LANG']['tl_zad_docman']['but_unpublish'] = 'Togli pubblicazione';
 $GLOBALS['TL_LANG']['tl_zad_docman']['but_edit'] = 'Modifica';
