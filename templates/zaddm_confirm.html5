@@ -1,0 +1,32 @@
+
+<!-- indexer::stop -->
+<div class="<?php echo $this->class; ?> block"<?php echo $this->cssID; ?><?php if ($this->style): ?> style="<?php echo $this->style; ?>"<?php endif; ?>>
+<?php if ($this->headline): ?><<?php echo $this->hl; ?>><?php echo $this->headline; ?></<?php echo $this->hl; ?>><?php endif; ?>
+
+<h2><?php echo $this->header; ?></h2>
+<form action="<?php echo $this->href_action; ?>" id="zad_docman_delete" method="post">
+  <input type="hidden" name="FORM_SUBMIT" value="zad_docman_delete" />
+  <input type="hidden" name="REQUEST_TOKEN" value="{{request_token}}" />
+
+  <table class="zaddm_confirm">
+  <tbody>
+    <?php foreach($this->values as $item): ?>
+    <tr>
+      <td class="zaddm_label"><?php echo $item['label']; ?></td>
+      <td class="zaddm_value"><?php echo $item['value']; ?></td>
+    </tr>
+    <?php endforeach; ?>
+    <tr>
+      <td>&nbsp;</td>
+      <td class="zaddm_buttons">
+        <input type="submit" id="ctrl_confirm" name="_confirm" class="zaddm_submit" value="<?php echo $this->but_confirm; ?>" />
+        <input type="submit" id="ctrl_cancel" name="_cancel" class="zaddm_submit" value="<?php echo $this->but_cancel; ?>"  />
+      </td>
+    </tr>
+  </tbody>
+  </table>
+
+</form>
+
+</div>
+<!-- indexer::continue -->

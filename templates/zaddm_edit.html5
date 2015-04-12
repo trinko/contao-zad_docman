@@ -1,0 +1,269 @@
+
+<!-- indexer::stop -->
+<div class="<?php echo $this->class; ?> block"<?php echo $this->cssID; ?><?php if ($this->style): ?> style="<?php echo $this->style; ?>"<?php endif; ?>>
+<?php if ($this->headline): ?><<?php echo $this->hl; ?>><?php echo $this->headline; ?></<?php echo $this->hl; ?>><?php endif; ?>
+
+<h2><?php echo $this->header; ?></h2>
+<p class="zaddm_description"><span class="zaddm_mandatory">*</span> <?php echo $this->description; ?></p>
+<form action="<?php echo $this->href_action; ?>" id="zad_docman_edit" method="post" enctype="multipart/form-data">
+  <input type="hidden" name="FORM_SUBMIT" value="zad_docman_edit" />
+  <input type="hidden" name="REQUEST_TOKEN" value="{{request_token}}" />
+
+  <table class="zaddm_form">
+<?php foreach ($this->fields as $kfield=>$field): ?>
+  <?php if ($field['type'] == 't_choice'): ?>
+    <?php if ($field['listOther']): ?>
+<script type="text/javascript">//<![CDATA[
+function ZadDocman_<?php echo $kfield; ?>(el) {
+  var txt = document.getElementById("ctrl_field_<?php echo $kfield; ?>__OTHER__");
+  if (el.value=='__OTHER__') {
+    txt.disabled = false;
+    txt.focus();
+  } else {
+    txt.value = '';
+    txt.disabled = true;
+  }
+}
+//]]></script>
+    <?php endif; ?>
+    <tr>
+      <td class="zaddm_label">
+        <label for="ctrl_field_<?php echo $kfield; ?>">
+          <?php if ($field['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
+          <?php echo $field['label']; ?><?php if ($field['mandatory']): ?><span class="zaddm_mandatory">*</span><?php endif; ?>
+        </label>
+      </td>
+      <td class="zaddm_input<?php if (isset($this->error['field_'.$kfield])) echo ' zaddm_error'; ?>">
+        <?php if (isset($this->error['field_'.$kfield])): ?><p class="zaddm_error"><?php echo $this->error['field_'.$kfield]; ?></p><?php endif; ?>
+        <select class="zaddm_select" name="field_<?php echo $kfield; ?>" id="ctrl_field_<?php echo $kfield; ?>"<?php if ($field['listOther']): ?> onChange="ZadDocman_<?php echo $kfield; ?>(this)"<?php endif; ?>>
+        <?php foreach (unserialize($field['list']) as $opt): ?>
+          <?php if (isset($opt['group']) && $opt['group'] && $opt['value'] == 'start'): ?>
+          <optgroup label="<?php echo $opt['label']; ?>">
+          <?php elseif (isset($opt['group']) && $opt['group'] && $opt['value'] == 'end'): ?>
+          </optgroup>
+          <?php else: ?>
+          <option value="<?php echo $opt['value']; ?>"<?php if (!empty($this->data[$kfield]) && $this->data[$kfield] == $opt['value']): ?> selected="selected"<?php endif; ?>><?php echo $opt['label']; ?></option>
+          <?php endif; ?>
+        <?php endforeach; ?>
+        <?php if ($field['listOther']): ?><option value="__OTHER__"<?php if (substr($this->data[$kfield],0,10) == '__OTHER__:'): ?> selected="selected"<?php endif; ?>><?php echo $this->lbl_listother; ?></option><?php endif; ?>
+        </select>
+        <?php if ($field['listOther']): ?><input class="zaddm_text" type="text" name="field_<?php echo $kfield; ?>__OTHER__" id="ctrl_field_<?php echo $kfield; ?>__OTHER__" value="<?php echo substr($this->data[$kfield],10); ?>"<?php if (substr($this->data[$kfield],0,10) != '__OTHER__:'): ?> disabled="disabled"<?php endif; ?> /><?php endif; ?>
+      </td>
+    </tr>
+  <?php elseif ($field['type'] == 't_mchoice'): ?>
+    <?php if ($field['listOther']): ?>
+<script type="text/javascript">//<![CDATA[
+function ZadDocman_<?php echo $kfield; ?>(el) {
+  var txt = document.getElementById("ctrl_field_<?php echo $kfield; ?>__OTHER__");
+  if (el.checked) {
+    txt.disabled = false;
+    txt.focus();
+  } else {
+    txt.value = '';
+    txt.disabled = true;
+  }
+}
+//]]></script>
+    <?php endif; ?>
+    <tr>
+      <td class="zaddm_label">
+        <label>
+          <?php if ($field['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
+          <?php echo $field['label']; ?><?php if ($field['mandatory']): ?><span class="zaddm_mandatory">*</span><?php endif; ?>
+        </label>
+      </td>
+      <td class="zaddm_input<?php if (isset($this->error['field_'.$kfield])) echo ' zaddm_error'; ?>">
+        <?php if (isset($this->error['field_'.$kfield])): ?><p class="zaddm_error"><?php echo $this->error['field_'.$kfield]; ?></p><?php endif; ?>
+        <?php foreach (unserialize($field['list']) as $kopt=>$opt): ?>
+          <?php if (isset($opt['group']) && $opt['group'] && $opt['value'] == 'start'): ?>
+          <fieldset><legend><?php echo $opt['label']; ?></legend>
+          <?php elseif (isset($opt['group']) && $opt['group'] && $opt['value'] == 'end'): ?>
+          </fieldset>
+          <?php else: ?>
+          <span><input class="zaddm_checkbox" type="checkbox" name="field_<?php echo $kfield; ?>[]" id="ctrl_field_<?php echo $kfield; ?>_<?php echo $kopt; ?>" value="<?php echo $opt['value']; ?>"<?php if (!empty($this->data[$kfield]) && in_array($opt['value'],$this->data[$kfield])): ?> checked="checked"<?php endif; ?> />
+          <label for="ctrl_field_<?php echo $kfield; ?>_<?php echo $kopt; ?>"><?php echo $opt['label']; ?></label></span>
+          <?php endif; ?>
+        <?php endforeach; ?>
+        <?php if ($field['listOther']): ?>
+          <span><input class="zaddm_checkbox" type="checkbox" name="field_<?php echo $kfield; ?>[]" id="ctrl_field_<?php echo $kfield; ?>_OTHER" value="__OTHER__"<?php if (in_array('__OTHER__',$this->data[$kfield])): ?> checked="checked"<?php endif; ?><?php if ($field['listOther']): ?> onChange="ZadDocman_<?php echo $kfield; ?>(this)"<?php endif; ?> />
+          <label for="ctrl_field_<?php echo $kfield; ?>__OTHER__"><?php echo $this->lbl_listother; ?></label>
+          <input class="zaddm_text" type="text" name="field_<?php echo $kfield; ?>__OTHER__" id="ctrl_field_<?php echo $kfield; ?>__OTHER__" value="<?php if (in_array('__OTHER__',$this->data[$kfield])): ?><?php echo substr(end($this->data[$kfield]),10); ?><?php endif; ?>" <?php if (!in_array('__OTHER__',$this->data[$kfield])): ?> disabled="disabled"<?php endif; ?> />
+          </span>
+        <?php endif; ?>
+      </td>
+    </tr>
+  <?php elseif ($field['type'] == 't_auto'): ?>
+    <?php if ($this->isAdmin): ?>
+    <tr>
+      <td class="zaddm_label">
+        <label for="ctrl_field_<?php echo $kfield; ?>">
+          <span class="invisible"><?php echo $this->lbl_mandatory; ?></span>
+          <?php echo $field['label']; ?><span class="zaddm_mandatory">*</span>
+        </label>
+      </td>
+      <td class="zaddm_input<?php if (isset($this->error['field_'.$kfield])) echo ' zaddm_error'; ?>">
+        <?php if (isset($this->error['field_'.$kfield])): ?><p class="zaddm_error"><?php echo $this->error['field_'.$kfield]; ?></p><?php endif; ?>
+        <input class="zaddm_text" type="text" name="field_<?php echo $kfield; ?>" id="ctrl_field_<?php echo $kfield; ?>" value="<?php echo $this->data[$kfield]; ?>" />
+      </td>
+    </tr>
+    <?php endif; ?>
+  <?php else: ?>
+    <tr>
+      <td class="zaddm_label">
+        <label for="ctrl_field_<?php echo $kfield; ?>">
+          <?php if ($field['mandatory']): ?><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php endif; ?>
+          <?php echo $field['label']; ?><?php if ($field['mandatory']): ?><span class="zaddm_mandatory">*</span><?php endif; ?>
+        </label>
+      </td>
+      <td class="zaddm_input<?php if (isset($this->error['field_'.$kfield])) echo ' zaddm_error'; ?>">
+        <?php if (isset($this->error['field_'.$kfield])): ?><p class="zaddm_error"><?php echo $this->error['field_'.$kfield]; ?></p><?php endif; ?>
+        <input class="zaddm_text" type="text" name="field_<?php echo $kfield; ?>" id="ctrl_field_<?php echo $kfield; ?>" value="<?php echo $this->data[$kfield]; ?>" />
+      </td>
+    </tr>
+  <?php endif; ?>
+<?php endforeach; ?>
+<?php if ($this->editing): ?>
+*** NOT YET IMPLEMENTED ***
+<?php else: ?>
+    <tr>
+      <td class="zaddm_label"><label for="ctrl_document"><span class="invisible"><?php echo $this->lbl_mandatory; ?></span><?php echo $this->lbl_document; ?><span class="zaddm_mandatory">*</span></label></td>
+      <td class="zaddm_input<?php if (isset($this->error['document'])) echo ' zaddm_error'; ?>">
+        <?php if (isset($this->error['document'])): ?><p class="zaddm_error"><?php echo $this->error['document']; ?></p><?php endif; ?>
+        <div id="dz-document">
+          <div class="fallback">
+            <input type="file" name="document[]" id="ctrl_document" />
+          </div>
+          <div id="dz-document-container" class="dz-container" >
+            <div class="dz-default dz-message">
+              <span><?php echo $this->lbl_dropzone; ?></span>
+            </div>
+            <div id="dz-document-preview" class="dropzone-previews"></div>
+          </div>
+        </div>
+<script type="text/javascript">//<![CDATA[
+new Dropzone("#dz-document", {
+  url: "<?php echo $this->href_dropzone; ?>",
+  maxFilesize: <?php echo $this->maxFilesize; ?>,
+  paramName: "document",
+  uploadMultiple: true,
+  addRemoveLinks: true,
+  previewsContainer: "#dz-document-preview",
+  clickable: "#dz-document-container",
+  createImageThumbnails: false,
+  maxFiles: 1,
+  acceptedFiles: "<?php echo $this->acceptedFiles; ?>",
+  dictFallbackMessage: "<?php echo $this->err_dropzone; ?>",
+  dictInvalidFileType: "<?php echo $this->err_filetype; ?>",
+  dictFileTooBig: "<?php echo $this->err_filesize; ?>",
+  dictCancelUpload: "<?php echo $this->but_cancelupload; ?>",
+  dictCancelUploadConfirmation: "<?php echo $this->wrn_cancelupload; ?>",
+  dictRemoveFile: "<?php echo $this->but_removefile; ?>",
+  dictMaxFilesExceeded: "<?php echo $this->err_filecount; ?>",
+  init: function() {
+    var DZ = this;
+    DZ.on("successmultiple", function(files, response) {
+      $.each(files, function(key,file){
+        file.uploaded = response[key];
+      });
+    });
+    DZ.on("removedfile", function(file) {
+      if (file.uploaded) {
+        $.post("<?php echo $this->href_dropzone_cancel; ?>", { pname: 'document', file: file.uploaded });
+      } else if (file.existent) {
+        $.post("<?php echo $this->href_dropzone_cancel; ?>", { pname: 'document', file: file.existent });
+        DZ.options.maxFiles++;
+      }
+    });
+    $.post('<?php echo $this->href_dropzone; ?>', { pname: 'document' }, function(data) {
+      $.each(data, function(key,value){
+        if (value.type != 'removed') {
+          var mockFile = { name: value.name, size: value.size, existent: value };
+          DZ.options.addedfile.call(DZ, mockFile);
+          DZ.options.maxFiles--;
+        }
+      });
+    });
+  }
+});
+//]]></script>
+      </td>
+    </tr>
+<?php endif; ?>
+<?php if ($this->attach): ?>
+    <tr>
+      <td class="zaddm_label"><label for="ctrl_attach"><?php echo $this->lbl_attach; ?></label></td>
+      <td class="zaddm_input<?php if (isset($this->error['attach'])) echo ' zaddm_error'; ?>">
+        <?php if (isset($this->error['attach'])): ?><p class="zaddm_error"><?php echo $this->error['attach']; ?></p><?php endif; ?>
+        <div id="dz-attach">
+          <div class="fallback">
+            <input type="file" name="attach[]" id="ctrl_attach" />
+          </div>
+          <div id="dz-attach-container" class="dz-container" >
+            <div class="dz-default dz-message">
+              <span><?php echo $this->lbl_dropzone; ?></span>
+            </div>
+            <div id="dz-attach-preview" class="dropzone-previews"></div>
+          </div>
+        </div>
+<script type="text/javascript">//<![CDATA[
+new Dropzone("#dz-attach", {
+  url: "<?php echo $this->href_dropzone; ?>",
+  maxFilesize: <?php echo $this->maxFilesize; ?>,
+  paramName: "attach",
+  uploadMultiple: true,
+  addRemoveLinks: true,
+  previewsContainer: "#dz-attach-preview",
+  clickable: "#dz-attach-container",
+  createImageThumbnails: false,
+  maxFiles: 10,
+  acceptedFiles: "<?php echo $this->acceptedFiles; ?>",
+  dictFallbackMessage: "<?php echo $this->err_dropzone; ?>",
+  dictInvalidFileType: "<?php echo $this->err_filetype; ?>",
+  dictFileTooBig: "<?php echo $this->err_filesize; ?>",
+  dictCancelUpload: "<?php echo $this->but_cancelupload; ?>",
+  dictCancelUploadConfirmation: "<?php echo $this->wrn_cancelupload; ?>",
+  dictRemoveFile: "<?php echo $this->but_removefile; ?>",
+  dictMaxFilesExceeded: "<?php echo $this->err_filecount; ?>",
+  init: function() {
+    var DZ = this;
+    DZ.on("successmultiple", function(files, response) {
+      $.each(files, function(key,file){
+        file.uploaded = response[key];
+      });
+    });
+    DZ.on("removedfile", function(file) {
+      if (file.uploaded) {
+        $.post("<?php echo $this->href_dropzone_cancel; ?>", { pname: 'attach', file: file.uploaded });
+      } else if (file.existent) {
+        $.post("<?php echo $this->href_dropzone_cancel; ?>", { pname: 'attach', file: file.existent });
+        DZ.options.maxFiles++;
+      }
+    });
+    $.post('<?php echo $this->href_dropzone; ?>', { pname: 'attach' }, function(data) {
+      $.each(data, function(key,value){
+        if (value.type != 'removed') {
+          var mockFile = { name: value.name, size: value.size, existent: value };
+          DZ.options.addedfile.call(DZ, mockFile);
+          DZ.options.maxFiles--;
+        }
+      });
+    });
+  }
+});
+//]]></script>
+      </td>
+    </tr>
+<?php endif; ?>
+    <tr>
+      <td>&nbsp;</td>
+      <td class="zaddm_buttons">
+        <input type="submit" id="ctrl_save" name="_save" class="zaddm_submit" value="<?php echo $this->but_save; ?>" />
+        <input type="submit" id="ctrl_cancel" name="_cancel" class="zaddm_submit" value="<?php echo $this->but_cancel; ?>" />
+      </td>
+    </tr>
+  </table>
+
+</form>
+
+</div>
+<!-- indexer::continue -->
