@@ -86,7 +86,7 @@ function ZadDocman_<?php echo $kfield; ?>(el) {
         <?php endforeach; ?>
         <?php if ($field['listOther']): ?>
           <span><input class="zaddm_checkbox" type="checkbox" name="field_<?php echo $kfield; ?>[]" id="ctrl_field_<?php echo $kfield; ?>_OTHER" value="__OTHER__"<?php if (in_array('__OTHER__',$this->data[$kfield])): ?> checked="checked"<?php endif; ?><?php if ($field['listOther']): ?> onChange="ZadDocman_<?php echo $kfield; ?>(this)"<?php endif; ?> />
-          <label for="ctrl_field_<?php echo $kfield; ?>__OTHER__"><?php echo $this->lbl_listother; ?></label>
+          <label for="ctrl_field_<?php echo $kfield; ?>_OTHER"><?php echo $this->lbl_listother; ?></label>
           <input class="zaddm_text" type="text" name="field_<?php echo $kfield; ?>__OTHER__" id="ctrl_field_<?php echo $kfield; ?>__OTHER__" value="<?php if (in_array('__OTHER__',$this->data[$kfield])): ?><?php echo substr(end($this->data[$kfield]),10); ?><?php endif; ?>" <?php if (!in_array('__OTHER__',$this->data[$kfield])): ?> disabled="disabled"<?php endif; ?> />
           </span>
         <?php endif; ?>

@@ -69,7 +69,7 @@ $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_grouped'] = 'Documenti raggruppati per
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_mandatorydesc'] = 'I campi contrassegnati con l\'asterisco sono obbligatori.';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notification'] = 'Notifica';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifysend'] = 'Da inviare entro un\'ora';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifygroup'] = 'Da inviare a fine giornata';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifycollect'] = 'Da inviare a fine giornata';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifysent'] = 'Inviata il %s';
 
 

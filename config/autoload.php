@@ -5,9 +5,7 @@
  *
  * Copyright (c) 2005-2015 Leo Feyer
  *
- * @package Zad_docman
- * @link    https://contao.org
- * @license http://www.gnu.org/licenses/lgpl-3.0.html LGPL
+ * @license LGPL-3.0+
  */
 
 
@@ -34,7 +32,6 @@ ClassLoader::addClasses(array
 	'zad_docman\ZadDocmanDataModel'     => 'system/modules/zad_docman/models/ZadDocmanDataModel.php',
 	'zad_docman\ZadDocmanFieldsModel'   => 'system/modules/zad_docman/models/ZadDocmanFieldsModel.php',
 	'zad_docman\ZadDocmanModel'         => 'system/modules/zad_docman/models/ZadDocmanModel.php',
-	'zad_docman\ZadDocmanNotifyModel'   => 'system/modules/zad_docman/models/ZadDocmanNotifyModel.php',
 
 	// Modules
 	'zad_docman\ModuleZadDocman'        => 'system/modules/zad_docman/modules/ModuleZadDocman.php',

@@ -30,7 +30,7 @@ $GLOBALS['TL_DCA']['tl_zad_docman_fields'] = array(
 		'sorting' => array(
 			'mode'                        => 4,
 			'fields'                      => array('sorting'),
-			'headerFields'                => array('name','enableAttach','editing','notify'),
+			'headerFields'                => array('name','enableAttach','notify'),
 			'panelLayout'                 => 'search,limit',
 			'child_record_callback'       => array('tl_zad_docman_fields', 'listFields')
 		),

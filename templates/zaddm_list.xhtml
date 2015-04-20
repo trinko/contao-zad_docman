@@ -4,6 +4,9 @@
 <?php if ($this->headline): ?><<?php echo $this->hl; ?>><?php echo $this->headline; ?></<?php echo $this->hl; ?>><?php endif; ?>
 
 <?php if (count($this->docs) > 0): ?>
+<div class="zadam_actions">
+  <a class="button" href="<?php echo $this->href_add; ?>"><?php echo $this->but_add; ?></a>
+</div>
 <table class="zaddm_documentlist" summary="<?php echo $this->lbl_documentlist; ?>">
 <caption><?php echo $this->lbl_documentlist; ?></caption>
 <thead>

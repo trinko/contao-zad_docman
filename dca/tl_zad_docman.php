@@ -51,8 +51,19 @@ $GLOBALS['TL_DCA']['tl_zad_docman'] = array(
 		),
 		'publishedTimestamp' => array(
 			'sql'                         => "int(10) unsigned NOT NULL default '0'"
-		)
+		),
+		'notificationTimestamp' => array(
+			'sql'                         => "int(10) unsigned NOT NULL default '0'"
+		),
+		'notificationSent' => array(
+			'sql'                         => "blob NULL"
+		),
+		'notificationError' => array(
+			'sql'                         => "blob NULL"
+		),
+		'notificationState' => array(
+			'sql'                         => "varchar(16) NOT NULL default ''"
+    )
 	)
 );
-
 

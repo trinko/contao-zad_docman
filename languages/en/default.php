@@ -69,7 +69,7 @@ $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_grouped'] = 'Document grouped by %s';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_mandatorydesc'] = 'Fields marked with asterisk are mandatory.';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notification'] = 'Notification';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifysend'] = 'To be sent in an hour';
-$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifygroup'] = 'To be sent at the end of the day';
+$GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifycollect'] = 'To be sent at the end of the day';
 $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifysent'] = 'Sent on %s';
 
 

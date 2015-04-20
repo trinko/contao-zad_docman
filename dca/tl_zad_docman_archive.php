@@ -260,7 +260,7 @@ $GLOBALS['TL_DCA']['tl_zad_docman_archive'] = array(
  *
  * Provide miscellaneous methods that are used by the data configuration array.
  *
- * @copyright Antonello Dessì 2014
+ * @copyright Antonello Dessì 2015
  * @author    Antonello Dessì
  * @package   zad_docman
  */

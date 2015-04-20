@@ -641,7 +641,10 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
   		  $doc = new \ZadDocmanModel();
       } elseif ($doc->published) {
         // remove notification for this document
-        $this->removeNotification($doc);
+        $doc->notificationTimestamp = 0;
+        $doc->notificationSent = null;
+        $doc->notificationError = null;
+        $doc->notificationState = '';
       }
       $doc->pid = $this->docman->id;
       $doc->tstamp = time();
@@ -913,10 +916,6 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
         $data->delete();
       }
     }
-    if ($doc->published) {
-      // remove notification for this document
-      $this->removeNotification($doc);
-    }
     // delete document
     $doc->delete();
     // go to document list
@@ -969,14 +968,46 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
           $doc->attach = serialize($files);
         }
       }
+      // notify
+      if ($this->docman->notify) {
+        // add a notification for this document
+        $doc->notificationTimestamp = 0;
+        $doc->notificationSent = null;
+        $doc->notificationError = null;
+        if ($this->docman->notifyCollect) {
+        // add a collected notification
+          $doc->notificationState = 'COLLECT';
+        } else {
+          // add single notification
+          $doc->notificationState = 'SEND';
+        }
+      }
       // set published fields
       $doc->published = '1';
       $doc->publishedTimestamp = time();
       $doc->save();
-      // notify
-      if ($this->docman->notify) {
-        // add a notification for this document
-        $this->addNotification($doc);
+      // get fields
+      $fields = $this->getFields();
+      $data = \ZadDocmanDataModel::findByPid($doc->id);
+      // create a data array structure
+      $data_array = array();
+      while ($data->next()) {
+        $data_array[$data->field] = $data->value;
+      }
+      // set data values
+      $values = array();
+      foreach ($fields as $kfld=>$fld) {
+        $values[$kfld] = $this->formatFieldText($data_array[$kfld], $fld);
+      }
+      // add meta info for document file
+      $text = $this->insertFields($this->zad_docman_docname, $values);
+      $this->addMeta($doc->document, $text);
+      // add meta info for attached files
+      $files = unserialize($doc->attach);
+      foreach ($files as $kfile=>$file) {
+        $text = str_replace('{{attachnum}}', $kfile+1, $this->zad_docman_attachname);
+        $text = $this->insertFields($text, $values);
+        $this->addMeta($file, $text);
       }
 			// add a log entry for published file
       $this->log('ZAD DocMan - Published document with ID '.$id, __METHOD__, 'ZAD_DOCMAN');
@@ -989,15 +1020,15 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
         $this->errorMessage($GLOBALS['TL_LANG']['tl_zad_docman']['err_auth'], $base_url);
         return;
       }
+      // remove notification for this document
+      $doc->notificationTimestamp = 0;
+      $doc->notificationSent = null;
+      $doc->notificationError = null;
+      $doc->notificationState = '';
       // set published fields
       $doc->published = '';
       $doc->publishedTimestamp = 0;
       $doc->save();
-      // notification
-      if ($this->docman->notify) {
-        // remove notification for this document
-        $this->removeNotification($doc);
-      }
 			// add a log entry for published file
       $this->log('ZAD DocMan - Unpublished document with ID '.$id, __METHOD__, 'ZAD_DOCMAN');
     }
@@ -1062,18 +1093,14 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       // published document
       $date = new \Date($doc->publishedTimestamp);
       $status = sprintf($GLOBALS['TL_LANG']['tl_zad_docman']['lbl_publishedtm'], $date->datim);
-      // notification
-      $notify = \ZadDocmanNotifyModel::findByPid($doc->id);
-      if ($notify !== null) {
-        // notification info
-        if ($notify->state == 'SEND') {
-          $notification = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifysend'];
-        } elseif (substr($notify->state, 0, 6) == 'GROUP-') {
-          $notification = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifygroup'];
-        } elseif ($notify->state == 'SENT') {
-          $date = new \Date($notify->tstamp);
-          $notification = sprintf($GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifysent'], $date->datim);
-        }
+      // notification info
+      if ($doc->notificationState == 'SEND') {
+        $notification = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifysend'];
+      } elseif ($doc->notificationState == 'COLLECT') {
+        $notification = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifycollect'];
+      } elseif ($doc->notificationState == 'SENT') {
+        $date = new \Date($doc->notificationTimestamp);
+        $notification = sprintf($GLOBALS['TL_LANG']['tl_zad_docman']['lbl_notifysent'], $date->datim);
       }
     } else {
       // draft document
@@ -1535,58 +1562,6 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
     return $uuid;
   }
 
-	/**
-	 * Add a notification for this document
-	 *
-	 * @param \ZadDocmanModel $doc  The document
-	 */
-	private function addNotification($doc) {
-    $notify = new \ZadDocmanNotifyModel();
-    // get fields
-    $fields = $this->getFields();
-    $data = \ZadDocmanDataModel::findByPid($doc->id);
-    // create a data array structure
-    $data_array = array();
-    while ($data->next()) {
-      $data_array[$data->field] = $data->value;
-    }
-    // set data values
-    $values = array();
-    foreach ($fields as $kfld=>$fld) {
-      $values[$kfld] = $this->formatFieldText($data_array[$kfld], $fld);
-    }
-    // extract recipients
-    $recipients = array();
-		$db = \Database::getInstance();
-    foreach (deserialize($this->docman->notifyGroups) as $group) {
-      $sql = "SELECT t.email ".
-             "FROM tl_member AS t ".
-             "WHERE t.groups LIKE '%:\"$group\";%'";
-      $res = $db->execute($sql);
-      $recipients = array_merge($recipients, $res->fetchEach('email'));
-    }
-    $recipients = array_unique($recipients);
-    if ($this->docman->notifyCollect) {
-      // add a collected notification
-      $notify->pid = $doc->id;
-      $notify->tstamp = time();
-      $notify->subject = '';
-      $notify->text = serialize($values);
-      $notify->recipients = serialize($recipients);
-      $notify->state = 'GROUP-'.$this->docman->id;
-      $notify->save();
-    } else {
-      // add single notification
-      $notify->pid = $doc->id;
-      $notify->tstamp = time();
-      $notify->subject = $this->docman->notifySubject;
-      $notify->text = $this->insertFields($this->docman->notifyText, $values);
-      $notify->recipients = serialize($recipients);
-      $notify->state = 'SEND';
-      $notify->save();
-    }
-  }
-
   /**
 	 * Insert field values in text
 	 *
@@ -1606,16 +1581,23 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
   }
 
 	/**
-	 * Remove notification for this document
+	 * Add meta info to the file
 	 *
-	 * @param \ZadDocmanModel $doc  The document
+	 * @param string $uuid  The UUID of the file
+	 * @param string $info  The text to add as meta info
 	 */
-	private function removeNotification($doc) {
-    $notify = \ZadDocmanNotifyModel::findByPid($doc->id);
-    if ($notify !== null) {
-      // remove
-      $notify->delete();
+	private function addMeta($uuid, $info) {
+	  // get file
+    $file = \FilesModel::findByUuid($uuid);
+    if ($file === null) {
+      // error, no file
+      return null;
     }
+    // meta info
+    $meta = array();
+    $meta[$GLOBALS['TL_LANGUAGE']] = array('title'=>$info, 'link'=>$info, 'caption'=>'');
+    $file->meta = serialize($meta);
+    $file->save();
   }
 
 }
