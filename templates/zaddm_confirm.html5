@@ -17,6 +17,20 @@
     </tr>
     <?php endforeach; ?>
     <tr>
+      <td class="zaddm_label"><?php echo $this->lbl_document; ?></td>
+      <td class="zaddm_value"><a href="<?php echo $this->href_document; ?>"><?php echo $this->lbl_downloaddocument; ?></a></td>
+    </tr>
+<?php if (count($this->attach)): ?>
+    <tr>
+      <td class="zaddm_label"><?php echo $this->lbl_attach; ?></td>
+      <td class="zaddm_value">
+<?php foreach($this->attach as $item): ?>
+        <a href="<?php echo $item['href']; ?>"><?php echo $item['label']; ?></a>
+<?php endforeach; ?>
+      </td>
+    </tr>
+<?php endif; ?>
+    <tr>
       <td>&nbsp;</td>
       <td class="zaddm_buttons">
         <input type="submit" id="ctrl_confirm" name="_confirm" class="zaddm_submit" value="<?php echo $this->but_confirm; ?>" />

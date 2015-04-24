@@ -47,7 +47,7 @@ function ZadDocman_<?php echo $kfield; ?>(el) {
         <?php endforeach; ?>
         <?php if ($field['listOther']): ?><option value="__OTHER__"<?php if (substr($this->data[$kfield],0,10) == '__OTHER__:'): ?> selected="selected"<?php endif; ?>><?php echo $this->lbl_listother; ?></option><?php endif; ?>
         </select>
-        <?php if ($field['listOther']): ?><input class="zaddm_text" type="text" name="field_<?php echo $kfield; ?>__OTHER__" id="ctrl_field_<?php echo $kfield; ?>__OTHER__" value="<?php echo substr($this->data[$kfield],10); ?>"<?php if (substr($this->data[$kfield],0,10) != '__OTHER__:'): ?> disabled="disabled"<?php endif; ?> /><?php endif; ?>
+        <?php if ($field['listOther']): ?><input class="zaddm_text" type="text" maxlength="100" name="field_<?php echo $kfield; ?>__OTHER__" id="ctrl_field_<?php echo $kfield; ?>__OTHER__" value="<?php echo substr($this->data[$kfield],10); ?>"<?php if (substr($this->data[$kfield],0,10) != '__OTHER__:'): ?> disabled="disabled"<?php endif; ?> /><?php endif; ?>
       </td>
     </tr>
   <?php elseif ($field['type'] == 't_mchoice'): ?>
@@ -87,7 +87,7 @@ function ZadDocman_<?php echo $kfield; ?>(el) {
         <?php if ($field['listOther']): ?>
           <span><input class="zaddm_checkbox" type="checkbox" name="field_<?php echo $kfield; ?>[]" id="ctrl_field_<?php echo $kfield; ?>_OTHER" value="__OTHER__"<?php if (in_array('__OTHER__',$this->data[$kfield])): ?> checked="checked"<?php endif; ?><?php if ($field['listOther']): ?> onChange="ZadDocman_<?php echo $kfield; ?>(this)"<?php endif; ?> />
           <label for="ctrl_field_<?php echo $kfield; ?>_OTHER"><?php echo $this->lbl_listother; ?></label>
-          <input class="zaddm_text" type="text" name="field_<?php echo $kfield; ?>__OTHER__" id="ctrl_field_<?php echo $kfield; ?>__OTHER__" value="<?php if (in_array('__OTHER__',$this->data[$kfield])): ?><?php echo substr(end($this->data[$kfield]),10); ?><?php endif; ?>" <?php if (!in_array('__OTHER__',$this->data[$kfield])): ?> disabled="disabled"<?php endif; ?> />
+          <input class="zaddm_text" type="text" maxlength="100" name="field_<?php echo $kfield; ?>__OTHER__" id="ctrl_field_<?php echo $kfield; ?>__OTHER__" value="<?php if (in_array('__OTHER__',$this->data[$kfield])): ?><?php echo substr(end($this->data[$kfield]),10); ?><?php endif; ?>" <?php if (!in_array('__OTHER__',$this->data[$kfield])): ?> disabled="disabled"<?php endif; ?> />
           </span>
         <?php endif; ?>
       </td>

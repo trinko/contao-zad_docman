@@ -294,6 +294,7 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
     if ($id > 0) {
       // edit a document
       $param['zdA'] = 'editx';
+      $param['zdP'] = intval(\Input::get('zdP'));
       $param['zdD'] = $id;
       $this->Template->href_action = $this->createUrl($param, $base_url);
       $this->Template->header = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentedit'];
@@ -445,7 +446,10 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
           }
         }
       }
-      $this->redirect($base_url);
+      // go to document list
+      $param = array();
+      $param['zdP'] = intval(\Input::get('zdP'));
+      $this->redirect($this->createUrl($param, $base_url));
     }
     // validate data
     $data = array();
@@ -716,19 +720,23 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
         $info->save();
       }
       // go to document list
-      $this->redirect($base_url);
+      $param = array();
+      $param['zdP'] = intval(\Input::get('zdP'));
+      $this->redirect($this->createUrl($param, $base_url));
     } else {
       // show errors
       $this->Template = new \FrontendTemplate('zaddm_edit');
       if ($id > 0) {
          // edit a document
         $param['zdA'] = 'editx';
+        $param['zdP'] = intval(\Input::get('zdP'));
         $param['zdD'] = $id;
         $this->Template->href_action = $this->createUrl($param, $base_url);
         $this->Template->header = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentedit'];
       } else {
          // add a document
         $param['zdA'] = 'addx';
+        $param['zdP'] = intval(\Input::get('zdP'));
         $this->Template->href_action = $this->createUrl($param, $base_url);
         $this->Template->header = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentadd'];
       }
@@ -849,14 +857,40 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
           'value' => $this->formatFieldText($data_array[$kfld], $fld));
       }
     }
+    // download document href
+    $param = array();
+    $param['zdA'] = 'download';
+    $param['zdF'] = \String::binToUuid($doc->document);
+    $href_document = $this->createUrl($param, $base_url);
+    $attach = array();
+    if ($this->docman->enableAttach) {
+      // attach files
+      $attaches = unserialize($doc->attach);
+      foreach ($attaches as $katt=>$att) {
+        $param['zdA'] = 'download';
+        $param['zdF'] = \String::binToUuid($att);
+        $href = $this->createUrl($param, $base_url);
+        $attach[] = array(
+          'href' => $href,
+          'label' => sprintf($GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloadattach'], $katt+1)
+          );
+      }
+    }
     // set template
     $this->Template = new \FrontendTemplate('zaddm_confirm');
     // set template vars
-    $param['zdA'] = 'deletex';
+    $param = array();
     $param['zdD'] = $id;
+    $param['zdP'] = intval(\Input::get('zdP'));
+    $param['zdA'] = 'deletex';
     $this->Template->href_action = $this->createUrl($param, $base_url);
     $this->Template->header = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentdelete'];
     $this->Template->values = $values;
+		$this->Template->href_document = $href_document;
+  	$this->Template->attach = $attach;
+    $this->Template->lbl_document = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_document'];
+    $this->Template->lbl_attach = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_attach'];
+    $this->Template->lbl_downloaddocument = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_downloaddocument'];
     $this->Template->but_confirm = $GLOBALS['TL_LANG']['tl_zad_docman']['but_confirm'];
     $this->Template->but_cancel = $GLOBALS['TL_LANG']['tl_zad_docman']['but_cancel'];
   }
@@ -893,7 +927,9 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
     }
     if (strlen(\Input::post('_confirm')) == 0) {
       // cancel button pressed
-      $this->redirect($base_url);
+      $param = array();
+      $param['zdP'] = intval(\Input::get('zdP'));
+      $this->redirect($this->createUrl($param, $base_url));
     }
     // delete files
 		$this->import('Files');
@@ -919,7 +955,9 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
     // delete document
     $doc->delete();
     // go to document list
-    $this->redirect($base_url);
+    $param = array();
+    $param['zdP'] = intval(\Input::get('zdP'));
+    $this->redirect($this->createUrl($param, $base_url));
   }
 
   /**
@@ -1033,7 +1071,9 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       $this->log('ZAD DocMan - Unpublished document with ID '.$id, __METHOD__, 'ZAD_DOCMAN');
     }
     // go to document list
-    $this->redirect($base_url);
+    $param = array();
+    $param['zdP'] = intval(\Input::get('zdP'));
+    $this->redirect($this->createUrl($param, $base_url));
   }
 
 	/**
@@ -1111,6 +1151,7 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
       'label' => $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_status'],
       'value' => $status);
     // download document href
+    $param = array();
     $param['zdA'] = 'download';
     $param['zdF'] = \String::binToUuid($doc->document);
     $href_document = $this->createUrl($param, $base_url);
@@ -1130,10 +1171,13 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
     }
     // set template
     $this->Template = new \FrontendTemplate('zaddm_show');
+    // referer url
+    $param = array();
+    $param['zdP'] = intval(\Input::get('zdP'));
+    $this->Template->referer = $this->createUrl($param, $base_url);
     // set template vars
     $this->Template->header = $GLOBALS['TL_LANG']['tl_zad_docman']['lbl_documentshow'];
     $this->Template->values = $values;
-  	$this->Template->referer = $base_url;
 		$this->Template->back = $GLOBALS['TL_LANG']['MSC']['goBack'];
 		$this->Template->href_document = $href_document;
   	$this->Template->attach = $attach;
@@ -1222,6 +1266,7 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
           // user can edit/delete document
           $param = array();
           $param['zdD'] = $docs->id;
+          $param['zdP'] = $page;
           $param['zdA'] = 'edit';
           $data[$index]['href_edit'] = $this->createUrl($param, $base_url);
           $param['zdA'] = 'delete';
@@ -1241,6 +1286,7 @@ class ModuleZadDocmanManager extends \ModuleZadDocman {
         // preview
         $param = array();
         $param['zdD'] = $docs->id;
+        $param['zdP'] = $page;
         $param['zdA'] = 'show';
         $data[$index]['href_show'] = $this->createUrl($param, $base_url);
         $index++;

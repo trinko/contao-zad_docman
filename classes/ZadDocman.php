@@ -67,7 +67,7 @@ class ZadDocman extends \Backend {
         foreach (deserialize($res->notifyGroups) as $group) {
           $sql = "SELECT t.email ".
                  "FROM tl_member AS t ".
-                 "WHERE t.groups LIKE '%:\"$group\";%'";
+                 "WHERE t.groups LIKE '%:\"$group\";%' AND t.disable=''";
           $recipients_res = $this->db->execute($sql);
           $recipients = array_merge($recipients, $recipients_res->fetchEach('email'));
         }
@@ -131,7 +131,7 @@ class ZadDocman extends \Backend {
         foreach (deserialize($res->notifyGroups) as $group) {
           $sql = "SELECT t.email ".
                  "FROM tl_member AS t ".
-                 "WHERE t.groups LIKE '%:\"$group\";%'";
+                 "WHERE t.groups LIKE '%:\"$group\";%' AND t.disable=''";
           $recipients_res = $this->db->execute($sql);
           $recipients = array_merge($recipients, $recipients_res->fetchEach('email'));
         }
@@ -178,25 +178,34 @@ class ZadDocman extends \Backend {
 	 * @return array  The list of recipients with errors
 	 */
 	private function send($recipients, $subject, $text) {
+    // init error list
     $errors = array();
-    // create new email
-		$email = new \Email();
-		list($email->fromName, $email->from) = \String::splitFriendlyEmail(\Config::get('adminEmail'));
-    $email->subject = $subject;
-		// load the mail template
+    // set HTML text
 		$template = new \BackendTemplate('zaddm_mail');
 		$template->charset = \Config::get('characterSet');
 		$template->title = $subject;
 		$template->css = '';
 		$template->body = $text;
-    // set HTML text
-		$email->html = $template->parse();
+		$html = $template->parse();
     // set plain text
-		$email->text = $this->htmlToText($email->html);
+		$plaintext = $this->htmlToText($text);
+    // set sender
+  	list($fromName, $from) = \String::splitFriendlyEmail(\Config::get('adminEmail'));
     // send
     foreach ($recipients as $rec) {
+      // create new email
+  		$email = new \Email();
+      $email->fromName = $fromName;
+      $email->from = $from;
+      $email->subject = $subject;
+  		$email->html = $html;
+  		$email->text = $plaintext;
       // send email
-      $email->sendTo($rec);
+  		try {
+        $email->sendTo($rec);
+  		} catch (\Swift_RfcComplianceException $e) {
+        $errors[] = $rec;
+  		}
       if ($email->hasFailures()) {
         $errors[] = $rec;
       }
